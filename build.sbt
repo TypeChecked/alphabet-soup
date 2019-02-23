@@ -4,7 +4,11 @@ lazy val alpahbetSoup = (project in file("."))
     name := "alpahbet-soup",
     scalaVersion := "2.12.8",
     resolvers += Resolver.sonatypeRepo("releases"),
-    libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.3",
+    libraryDependencies ++= Seq(
+      "com.chuusai" %% "shapeless" % "2.3.3",
+      "org.scalactic" %% "scalactic" % "3.0.5",
+      "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+    ),
     scalacOptions := Seq(
       "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
       "-encoding", "utf-8",                // Specify character encoding used by source files.
