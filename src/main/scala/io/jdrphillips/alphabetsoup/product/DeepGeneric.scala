@@ -6,7 +6,7 @@ import shapeless.HList
 import shapeless.Lazy
 import shapeless.{::, Generic}
 
-// T => HList
+// T => HList or Atom
 trait DeepGeneric[T] extends Serializable {
   type Repr
   def to(t : T) : Repr
