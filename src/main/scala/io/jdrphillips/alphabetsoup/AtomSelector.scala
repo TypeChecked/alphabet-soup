@@ -1,4 +1,5 @@
-package io.jdrphillips.alphabetsoup.product
+package io.jdrphillips
+package alphabetsoup
 
 import shapeless.<:!<
 import shapeless.{::, DepFn1, HList}
