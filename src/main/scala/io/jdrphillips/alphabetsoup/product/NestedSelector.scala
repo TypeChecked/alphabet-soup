@@ -35,7 +35,7 @@ trait LP {
   implicit def deepGenericFirst[L, LOut <: HList, U: Atom](
     implicit
     ev: L <:!< HList,
-    dg: DeepGeneric.Aux[L, LOut],
+    dg: Atomiser.Aux[L, LOut],
     s: NestedSelector[LOut, U]
   ): NestedSelector[L, U] = new NestedSelector[L, U] {
     def apply(t: L): U = s(dg.to(t))
