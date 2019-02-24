@@ -3,14 +3,19 @@ package alphabetsoup
 package product
 
 import org.scalatest._
-import shapeless.Generic
 import shapeless.{::, HNil}
+
+trait Evidence[T]
+object Evidence {
+  implicit val intEvidence: Evidence[Int] = new Evidence[Int] {}
+  implicit val hnilEvidence: Evidence[HNil] = new Evidence[HNil] {}
+}
 
 class DeepGenericSpec extends FlatSpec with Matchers {
 
   "DeepGeneric" should "work on Unit" in {
     val g = DeepGeneric[Unit]
-    (g.to(()): HNil) shouldBe HNil
+    (g.to(()): Unit) shouldBe (HNil)
     (g.from(HNil): Unit) shouldBe (())
   }
 
@@ -23,6 +28,8 @@ class DeepGenericSpec extends FlatSpec with Matchers {
   it should "work on simple hlists" in {
     type H = Int :: String :: Boolean :: HNil
     val hlist: H = 5 :: "hello" :: true :: HNil
+
+    DeepGeneric[Int :: HNil]
     val gen = DeepGeneric[H]
     (gen.to(hlist): H) shouldBe hlist
     (gen.from(hlist): H) shouldBe hlist
@@ -80,14 +87,14 @@ class DeepGenericSpec extends FlatSpec with Matchers {
   }
 
   it should "work for simply nested case classes recursively" in {
-    case class N(i: Int, f: Float)
+    case class N(i: Int, f: Char)
     case class T(n: N, s: String, b: Boolean)
 
-    type H = (Int :: Float :: HNil) :: String :: Boolean :: HNil
+    type H = (Int :: Char :: HNil) :: String :: Boolean :: HNil
 
     val gen = DeepGeneric[T]
-    val value: T = T(N(5, 4.5f), "hello", true)
-    val hlist: H = (5 :: 4.5f :: HNil) :: "hello" :: true :: HNil
+    val value: T = T(N(5, 'g'), "hello", true)
+    val hlist: H = (5 :: 'g' :: HNil) :: "hello" :: true :: HNil
 
     (gen.to(value): H) shouldBe hlist
     (gen.from(hlist): T) shouldBe value
@@ -163,8 +170,6 @@ class DeepGenericSpec extends FlatSpec with Matchers {
   }
 
   it should "work for a tuple at the head of an hlist at the head of an hlist" in {
-//    case class N(t: (String, Boolean))
-
     type T = ((String, Boolean):: HNil) :: Int :: HNil
     type H = ((String :: Boolean :: HNil) :: HNil) :: Int :: HNil
 
@@ -189,81 +194,47 @@ class DeepGenericSpec extends FlatSpec with Matchers {
     (gen.from(hlist): N) shouldBe value
   }
 
-  it should "work for a tuple in a case class at the head of a tuple" in {
+  it should "work for a tuple1 in a case class at the head of a tuple" in {
     case class N(t: Tuple1[String])
 
-//    type T = (N, Int)
-//    type H = ((String :: Boolean :: HNil) :: HNil) :: Int :: HNil
+    type T = (N, Int)
+    type H = ((String :: HNil) :: HNil) :: Int :: HNil
 
-//    val g  = DeepGeneric[ (Tuple1[Tuple1[String]], Int)  ]
-//    val r: g.Repr = 7
+    val gen = DeepGeneric[T]
+    val value: T = N(Tuple1("hello")) -> 11
+    val hlist: H = (("hello" :: HNil) :: HNil) :: 11 :: HNil
 
-    implicitly[DeepGeneric.Aux[Tuple1[String], String :: HNil]]
-
-    val g = DeepGeneric[N :: HNil]
-//    val r: g.Repr = 5
-
-    DeepGeneric.headFirstSearchCase[N, HNil, (String :: HNil) :: HNil, HNil](
-      DeepGeneric.initialToHListRecurse[N, Tuple1[String] :: HNil, (String :: HNil) :: HNil],
-      DeepGeneric.hnilCase
-    )
-
-    DeepGeneric.headFirstSearchCase[N, HNil, (String :: HNil) :: HNil, HNil](
-      DeepGeneric[N],
-      DeepGeneric.hnilCase
-    )
-
-    val h = DeepGeneric[N]
-    val h1: h.Repr = 9
-
-    DeepGeneric.headFirstSearchCase[N, HNil, Tuple1[String] :: HNil, HNil](
-      implicitly[DeepGeneric.Aux[N, Tuple1[String] :: HNil]],
-      DeepGeneric.hnilCase
-    )
-
-//    DeepGeneric.headFirstSearchCase[N, HNil, (String :: Boolean :: HNil) :: HNil, HNil]
-
-//    DeepGeneric.initialToHListRecurse[T, N :: Int :: HNil, H](
-//      Generic[(N, Int)],
-//      DeepGeneric.headFirstSearchCase[N, Int :: HNil, (String :: Boolean :: HNil) :: HNil, Int :: HNil]
-//    )
-
-
-//    val gen = DeepGeneric[T]
-//    val value: T = N("hello" -> true) -> 11
-//    val hlist: H = (("hello" :: true :: HNil) :: HNil) :: 11 :: HNil
-//
-//    (gen.to(value): H) shouldBe hlist
-//    (gen.from(hlist): T) shouldBe value
+    (gen.to(value): H) shouldBe hlist
+    (gen.from(hlist): T) shouldBe value
   }
 
-//  it should "work for an hlist inside a tuple inside a cas class inside a tuple" in {
-//    case class N(t: (Double, String :: HNil))
-//
-//    type T = (N, Int)
-//    type H = ((Double :: (String :: HNil) :: HNil) :: HNil) :: Int :: HNil
-//
-//    val gen = DeepGeneric[T]
-//    val value: T = (N((5.0, "hello" :: HNil)), 11)
-//    val hlist: H = ((5.0 :: ("hello" :: HNil) :: HNil) :: HNil) :: 11 :: HNil
-//
-//    (gen.to(value): H) shouldBe hlist
-//    (gen.from(hlist): T) shouldBe value
-//  }
-//
-//  it should "work for an HList inside a tuple inside a case class inside a tuple inside an HList" in {
-//    case class N(t: (Double, String :: HNil))
-//
-//    type T = Boolean :: Long :: (N, Int) :: HNil
-//    type H = Boolean :: Long :: (((Double :: (String :: HNil) :: HNil) :: HNil) :: Int :: HNil) :: HNil
-//
-//    val gen = DeepGeneric[T]
-//    val value: T = true :: 10l :: (N((5.0, "hello" :: HNil)), 11) :: HNil
-//    val hlist: H = true :: 10l :: (((5.0 :: ("hello" :: HNil) :: HNil) :: HNil) :: 11 :: HNil) :: HNil
-//
-//    (gen.to(value): H) shouldBe hlist
-//    (gen.from(hlist): T) shouldBe value
-//  }
+  it should "work for an hlist inside a tuple inside a cas class inside a tuple" in {
+    case class N(t: (Double, String :: HNil))
+
+    type T = (N, Int)
+    type H = ((Double :: (String :: HNil) :: HNil) :: HNil) :: Int :: HNil
+
+    val gen = DeepGeneric[T]
+    val value: T = (N((5.0, "hello" :: HNil)), 11)
+    val hlist: H = ((5.0 :: ("hello" :: HNil) :: HNil) :: HNil) :: 11 :: HNil
+
+    (gen.to(value): H) shouldBe hlist
+    (gen.from(hlist): T) shouldBe value
+  }
+
+  it should "work for an HList inside a tuple inside a case class inside a tuple inside an HList" in {
+    case class N(t: (Double, String :: HNil))
+
+    type T = Boolean :: Long :: (N, Int) :: HNil
+    type H = Boolean :: Long :: (((Double :: (String :: HNil) :: HNil) :: HNil) :: Int :: HNil) :: HNil
+
+    val gen = DeepGeneric[T]
+    val value: T = true :: 10l :: (N((5.0, "hello" :: HNil)), 11) :: HNil
+    val hlist: H = true :: 10l :: (((5.0 :: ("hello" :: HNil) :: HNil) :: HNil) :: 11 :: HNil) :: HNil
+
+    (gen.to(value): H) shouldBe hlist
+    (gen.from(hlist): T) shouldBe value
+  }
 
   it should "work for a complex mix of nested hlists, case classes and tuples" in {
 
@@ -274,22 +245,19 @@ class DeepGenericSpec extends FlatSpec with Matchers {
       h: Boolean :: Long :: (N, Int) :: HNil
     )
 
-    type H = (Int :: String :: HNil) :: Double :: (Boolean :: Long :: ((Double :: (String :: HNil) :: HNil) :: Int :: HNil) :: HNil) :: HNil
+    type H =
+      (Int :: String :: HNil) ::
+      Double ::
+      (Boolean :: Long :: (((Double :: (String :: HNil) :: HNil) :: HNil) :: Int :: HNil) :: HNil) ::
+      HNil
 
     val gen = DeepGeneric[C]
     val value = C((5, "hello"), 10.9, true :: 9l :: (N((10.12, "hello2" :: HNil)), 4) :: HNil)
     // This commented out behaviour is correct
-//    val hlist = (5 :: "hello" :: HNil) :: 10.9 :: (true :: 9l :: ((10.12 :: ("hello2" :: HNil) :: HNil) :: 4 :: HNil) :: HNil)
-//
-//    (gen.to(value): H) shouldBe hlist
-//    (gen.from(hlist): C) shouldBe value
+    val hlist = (5 :: "hello" :: HNil) :: 10.9 :: (true :: 9l :: (((10.12 :: ("hello2" :: HNil) :: HNil) :: HNil) :: 4 :: HNil) :: HNil) :: HNil
 
-    type H2 = (Int :: String :: HNil) :: Double :: (Boolean :: Long :: (N :: Int :: HNil) :: HNil) :: HNil
-    val hlist = (5 :: "hello" :: HNil) :: 10.9 :: (true :: 9l :: (N((10.12, ("hello2" :: HNil))) :: 4 :: HNil) :: HNil) :: HNil
-
-    (gen.to(value): H2) shouldBe hlist
+    (gen.to(value): H) shouldBe hlist
     (gen.from(hlist): C) shouldBe value
-
 
   }
 
