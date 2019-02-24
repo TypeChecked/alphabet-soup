@@ -1,9 +1,22 @@
 
+resolvers ++= Seq (
+  "Maven Central Server" at "http://repo1.maven.org/maven2",
+  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
+)
+
+// sbt-release plugin settings
+
+releaseUseGlobalVersion := false
+
+val publishLocalReleaseStep = ReleaseStep(releaseStepCommand("publishLocal"))
+// Replace 'publish' step with 'publishLocal' step
+releaseProcess -= ReleaseTransformations.publishArtifacts
+releaseProcess += publishLocalReleaseStep
+
 lazy val alpahbetSoup = (project in file("."))
   .settings(
     name := "alpahbet-soup",
     scalaVersion := "2.12.8",
-    resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
       "org.scalactic" %% "scalactic" % "3.0.5",
