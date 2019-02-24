@@ -13,21 +13,23 @@ import shapeless.test.illTyped
 // Existence of this proves A can be mixed into B
 trait Mixer[A, B]
 
-object Mixer extends L3 {
+object Mixer extends LowPriorityMixerImplicits1 {
 
   def apply[A, B](implicit m: Mixer[A, B]): Mixer[A, B] = m
 
+  // If we are dealing with an atom, we can mix it into itself
   implicit def atomicCase[A: Atom]: Mixer[A, A] = new Mixer[A, A] {}
 
 }
 
-trait L3 extends LPM2 {
+trait LowPriorityMixerImplicits1 extends LowPriorityMixerImplicits2 {
 
+  // Anything can satisfy HNil
   implicit def hnilCase[A]: Mixer[A, HNil] = new Mixer[A, HNil] {}
 
+  // Atomise B, and if it is an HList split it and recurse on head and tail
   implicit def bHListRecurse[A, B, BOut <: HList, BH, BT <: HList](
-    implicit
-    dgb: Atomiser.Aux[B, BOut],
+    implicit dgb: Atomiser.Aux[B, BOut],
     hcons: IsHCons.Aux[BOut, BH, BT],
     m1: Lazy[Mixer[A, BH]],
     m2: Mixer[A, BT]
@@ -35,11 +37,11 @@ trait L3 extends LPM2 {
 
 }
 
-trait LPM2 {
+trait LowPriorityMixerImplicits2 {
 
+  // If B is an atom, select the value from A
   implicit def bAtomicRecurse[A, AOut <: HList, B](
-    implicit
-    atom: Atom[B],
+    implicit atom: Atom[B],
     s: AtomSelector[A, B]
   ): Mixer[A, B] = new Mixer[A, B] {}
 
