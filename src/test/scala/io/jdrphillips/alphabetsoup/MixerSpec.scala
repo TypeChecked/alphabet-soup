@@ -121,7 +121,7 @@ class MixerSpec extends FlatSpec with Matchers {
   // Tree 1
   case class Person(firstName: FirstName, lastName: LastName, age: Age)
   case class Address(a1: Address1, a2: Address2, c: City, p: Postcode)
-  case class AllInfo(p: Person, a: Address)
+  case class Resident(p: Person, a: Address)
 
   // Tree 2
   case class FullName(f: FirstName, l: LastName)
@@ -139,7 +139,7 @@ class MixerSpec extends FlatSpec with Matchers {
     implicit val a6: Atom[City] = Atom[City]
     implicit val a7: Atom[Postcode] = Atom[Postcode]
 
-    val allInfo = AllInfo(
+    val resident = Resident(
       Person(
         FirstName("Boaty"),
         LastName("McBoatface"),
@@ -167,13 +167,13 @@ class MixerSpec extends FlatSpec with Matchers {
     )
 
     // No evidence for Age in LHS so can't construct RHS
-    illTyped("Mixer[PersonAndPostcodeAndAddress, AllInfo]")
+    illTyped("Mixer[PersonAndPostcodeAndAddress, Resident]")
 
-    Mixer[AllInfo, PersonAndPostcodeAndAddress].mix(allInfo) shouldBe expectedResult
+    Mixer[Resident, PersonAndPostcodeAndAddress].mix(resident) shouldBe expectedResult
   }
 
   it should "demonstrate behaviour without the expected Atoms present" in {
-    val allInfo = AllInfo(
+    val resident = Resident(
       Person(
         FirstName("Boaty"),
         LastName("McBoatface"),
@@ -201,7 +201,7 @@ class MixerSpec extends FlatSpec with Matchers {
       City("Boaty")
     )
 
-    Mixer[AllInfo, PersonAndPostcodeAndAddress].mix(allInfo) shouldBe expectedResult
+    Mixer[Resident, PersonAndPostcodeAndAddress].mix(resident) shouldBe expectedResult
   }
 
   it should "not compile if there is no Atom at all present" in {
