@@ -5,12 +5,6 @@ package product
 import org.scalatest._
 import shapeless.{::, HNil}
 
-trait Evidence[T]
-object Evidence {
-  implicit val intEvidence: Evidence[Int] = new Evidence[Int] {}
-  implicit val hnilEvidence: Evidence[HNil] = new Evidence[HNil] {}
-}
-
 class DeepGenericSpec extends FlatSpec with Matchers {
 
   "DeepGeneric" should "work on Unit" in {
