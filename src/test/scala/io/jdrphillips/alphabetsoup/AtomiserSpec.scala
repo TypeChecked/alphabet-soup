@@ -1,6 +1,5 @@
 package io.jdrphillips
 package alphabetsoup
-package product
 
 import org.scalatest._
 import shapeless.{::, HNil}
