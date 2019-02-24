@@ -15,8 +15,8 @@ class DeepGenericSpec extends FlatSpec with Matchers {
 
   "DeepGeneric" should "work on Unit" in {
     val g = DeepGeneric[Unit]
-    (g.to(()): Unit) shouldBe (HNil)
-    (g.from(HNil): Unit) shouldBe (())
+    (g.to(()): Unit) shouldBe (())
+    (g.from(()): Unit) shouldBe (())
   }
 
   it should "work on HNil" in {
@@ -258,7 +258,6 @@ class DeepGenericSpec extends FlatSpec with Matchers {
 
     (gen.to(value): H) shouldBe hlist
     (gen.from(hlist): C) shouldBe value
-
   }
 
 }
