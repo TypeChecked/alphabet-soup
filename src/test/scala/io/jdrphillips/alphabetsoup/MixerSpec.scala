@@ -109,15 +109,7 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[(Int, String, A1), A2 :: A1 :: HNil].mix((17, "string2", a1)) shouldBe A2("string2", 17) :: a1 :: HNil
   }
 
-  // Complex case classes
-  case class Age(i: Int)
-  case class FirstName(value: String)
-  case class LastName(value: String)
-  case class Address1(value: String)
-  case class Address2(value: String)
-  case class City(value: String)
-  case class Postcode(value: String)
-
+  // See bottom of file for the value classes included below
   // Tree 1
   case class Person(firstName: FirstName, lastName: LastName, age: Age)
   case class Address(a1: Address1, a2: Address2, c: City, p: Postcode)
@@ -225,3 +217,11 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[Z, (Int, TestTrait)].mix(Z(5, Testing)) shouldBe 5 -> Testing
   }
 }
+
+case class Age(i: Int) extends AnyVal
+case class FirstName(value: String) extends AnyVal
+case class LastName(value: String) extends AnyVal
+case class Address1(value: String) extends AnyVal
+case class Address2(value: String) extends AnyVal
+case class City(value: String) extends AnyVal
+case class Postcode(value: String) extends AnyVal
