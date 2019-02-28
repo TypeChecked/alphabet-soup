@@ -7,6 +7,14 @@ import shapeless.::
 import shapeless.HNil
 import shapeless.test.illTyped
 
+case class Age(i: Int) extends AnyVal
+case class FirstName(value: String) extends AnyVal
+case class LastName(value: String) extends AnyVal
+case class Address1(value: String) extends AnyVal
+case class Address2(value: String) extends AnyVal
+case class City(value: String) extends AnyVal
+case class Postcode(value: String) extends AnyVal
+
 class MixerSpec extends FlatSpec with Matchers {
 
   case class Single(s: String)
@@ -216,12 +224,28 @@ class MixerSpec extends FlatSpec with Matchers {
     // No Atom[TestTrait] so this does not compile
     Mixer[Z, (Int, TestTrait)].mix(Z(5, Testing)) shouldBe 5 -> Testing
   }
-}
 
-case class Age(i: Int) extends AnyVal
-case class FirstName(value: String) extends AnyVal
-case class LastName(value: String) extends AnyVal
-case class Address1(value: String) extends AnyVal
-case class Address2(value: String) extends AnyVal
-case class City(value: String) extends AnyVal
-case class Postcode(value: String) extends AnyVal
+  it should "mix up to the boundaries of molecules, and then isolated within those molecules" in {
+
+    case class A(i: Int, b: Boolean)
+    case class B(i: String)
+    case class Source(i: Int, s: String, as: List[A], bs: List[B])
+
+    case class BS(bs: List[B])
+    case class Target(i: Int, bs: BS, as: List[(Boolean, Int)])
+
+    val mixer = Mixer[Source, Target]
+
+    val a1 = A(1, true)
+    val a2 = A(2, false)
+    val a3 = A(3, true)
+
+    val b1 = B("ten")
+    val b2 = B("twenty")
+
+    val source = Source(17, "DANGER", List(a1, a2, a3), List(b1, b2))
+    val target = Target(17, BS(List(b1, b2)), List(true -> 1, false -> 2, true -> 3))
+
+    mixer.mix(source) shouldBe target
+  }
+}

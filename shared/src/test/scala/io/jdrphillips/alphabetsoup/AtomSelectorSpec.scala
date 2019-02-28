@@ -3,8 +3,7 @@ package alphabetsoup
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import shapeless.::
-import shapeless.HNil
+import shapeless.{::, Generic, HNil}
 import shapeless.test.illTyped
 
 class AtomSelectorSpec extends FlatSpec with Matchers {
@@ -14,6 +13,10 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
 
   "AtomSelector" should "not work on atoms" in {
     illTyped("AtomSelector[Int, Int]")
+  }
+
+  it should "not extract types that aren't there" in {
+    illTyped("AtomSelector[Int :: String :: HNil, Boolean]")
   }
 
   it should "work on simple hlists" in {
@@ -42,6 +45,51 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     illTyped("AtomSelector[T, String]")
     AtomSelector[T, Boolean].apply(t) shouldBe true
     AtomSelector[T, Pair].apply(t) shouldBe Pair(5, "hello")
+  }
+
+  it should "work on (A, B) :: (C, D) :: HNil" in {
+    implicit val pairAtom: Atom[Pair] = Atom[Pair]
+    type T = (Int, String) :: (Char, Boolean) :: HNil
+    val t = (1, "one") :: ('1', true) :: HNil
+    AtomSelector[T, Int].apply(t) shouldBe 1
+    AtomSelector[T, String].apply(t) shouldBe "one"
+    AtomSelector[T, Char].apply(t) shouldBe '1'
+    AtomSelector[T, Boolean].apply(t) shouldBe true
+  }
+
+  it should "select a molecule as-is" in {
+
+    case class A(b: Boolean, s: String)
+    case class A2(s: String, b: Boolean)
+    case class B(l: List[A])
+
+    val b = B(List(A(true, "1"), A(false, "2")))
+
+    // A can be mixed to A2, so we can select a molecule of A2 from B
+    AtomSelector[B, List[A]].apply(b) shouldBe b.l
+  }
+
+  it should "be able to select molecules that are mixable rather than precise matches" in {
+
+    case class A(b: Boolean, s: String)
+    case class A2(s: String, b: Boolean)
+    case class B(l: List[A])
+
+    val b = B(List(A(true, "1"), A(false, "2")))
+
+    // A can be mixed to A2, so we can select a molecule of A2 from B
+    AtomSelector[B, List[A2]].apply(b) shouldBe List(A2("1", true), A2("2", false))
+  }
+
+  it should "not allow data from outside the boundary of the molecule into the created molecule structure" in {
+    case class A(b: Boolean, s: String)
+    case class A2(s: String, b: Boolean)
+    case class B(a: A, l: List[A])
+
+    val b = B(A(true, "DANGER"), List(A(true, "1"), A(false, "2")))
+
+    // The initial 'A' value in b is NOT used in the construction of our molecule List[A2]
+    AtomSelector[B, List[A2]].apply(b) shouldBe List(A2("1", true), A2("2", false))
   }
 
 }

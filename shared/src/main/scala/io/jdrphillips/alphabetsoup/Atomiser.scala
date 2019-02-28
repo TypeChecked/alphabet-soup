@@ -5,7 +5,7 @@ import shapeless.HList
 import shapeless.Lazy
 import shapeless.{::, Generic}
 
-// T => HList or Atom
+// T => HList or Atom or Molecule
 trait Atomiser[T] extends Serializable {
   type Repr
   def to(t : T) : Repr
@@ -28,12 +28,20 @@ object Atomiser extends LowPriorityAtomiserImplicits1 {
     def from(r: HOut :: TOut): H :: T = atomiserH.value.from(r.head) :: atomiserT.from(r.tail)
   }
 
-  // If we've hit an Atom, we go no deeper
+  // If we've hit an Atom we go no deeper
   implicit def atomCase[T](implicit ev: Atom[T]): Atomiser.Aux[T, T] =
     new Atomiser[T] {
       type Repr = T
       def to(t: T): T = t
       def from(u: T): T = u
+    }
+
+  // If we've hit a molecule we go no deeper
+  implicit def moleculeCase[M[_], T](implicit ev: Molecule[M, T]): Atomiser.Aux[M[T], M[T]] =
+    new Atomiser[M[T]] {
+      type Repr = M[T]
+      def to(t: M[T]): M[T] = t
+      def from(u: M[T]): M[T] = u
     }
 
 }

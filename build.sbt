@@ -21,8 +21,10 @@ lazy val commonSettings = Seq(
   name := "alphabet-soup",
   scalaVersion := "2.12.8",
   organization := "io.jdrphillips",
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
+    "org.typelevel" %%% "cats-core" % "1.6.0",
     "org.scalactic" %%% "scalactic" % "3.0.5",
     "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
   ),

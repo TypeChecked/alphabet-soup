@@ -253,4 +253,26 @@ class AtomiserSpec extends FlatSpec with Matchers {
     (gen.from(hlist): C) shouldBe value
   }
 
+  it should "stop atomising at atoms" in {
+    case class Pair(i: Int, s: String)
+    case class T(p: Pair, b: Boolean)
+    implicit val pairAtom: Atom[Pair] = Atom[Pair]
+    val t = T(Pair(5, "hello"), true)
+
+    (Atomiser[T].to(t): Pair :: Boolean :: HNil) shouldBe Pair(5, "hello") :: true :: HNil
+  }
+
+  it should "stop processing at molecule boundaries" in {
+    case class A(b: Boolean, s: String)
+    case class B(i: Int, l: List[A])
+
+    val gen = Atomiser[B]
+
+    type Output = Int :: List[A] :: HNil
+    val value = B(5, List(A(true, "1"), A(false, "2")))
+    val hlist = 5 :: List(A(true, "1"), A(false, "2")) :: HNil
+    (gen.to(value): Output) shouldBe hlist
+    (gen.from(hlist): B) shouldBe value
+  }
+
 }
