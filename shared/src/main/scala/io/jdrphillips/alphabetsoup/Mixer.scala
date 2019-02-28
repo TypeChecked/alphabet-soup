@@ -7,15 +7,16 @@ import shapeless.HNil
 import shapeless.Lazy
 import shapeless.ops.hlist.IsHCons
 
-// Existence of this proves A can be mixed into B
+// This is the version code should use
 trait Mixer[A, B] {
   def mix(a: A): B
 }
 
-// TODO: Tidy up implicit structure?
-object Mixer extends LowPriorityMixerImplicits1 {
+object Mixer {
 
-  def apply[A, B](implicit m: Mixer[A, B]): Mixer[A, B] = m
+  def apply[A, B](implicit m: MixerImpl[A, B]): Mixer[A, B] = fromMixerImpl(m)
+
+  implicit def materialise[A, B](implicit m: MixerImpl[A, B]): Mixer[A, B] = fromMixerImpl(m)
 
   def from[From]: MixerBuilder[From] = new MixerBuilder[From] {}
 
@@ -25,18 +26,41 @@ object Mixer extends LowPriorityMixerImplicits1 {
 
     case class MixerBuilderCanComplete[Defaults <: HList, To](defaults: Defaults) {
 
-      def withDefault[F](t: F): MixerBuilderCanComplete[F :: Defaults, To] =
-        MixerBuilderCanComplete[F :: Defaults, To](t :: this.defaults)
+      def withDefault[F](t: F): MixerBuilderCanComplete[F :: Defaults :: HNil, To] =
+        MixerBuilderCanComplete[F :: Defaults :: HNil, To](t :: this.defaults :: HNil)
 
-      def mix(from: From)(implicit m: Mixer[From :: Defaults :: HNil, To]): To =
+      def mix(from: From)(implicit m: MixerImpl[From :: Defaults :: HNil, To]): To =
         m.mix(from :: defaults :: HNil)
+
+      def build(implicit m: MixerImpl[From :: Defaults :: HNil, To]): Mixer[From, To] =
+        new Mixer[From, To] {
+          def mix(a: From): To = {
+            m.mix(a :: defaults :: HNil)
+          }
+        }
 
     }
 
   }
 
+  private def fromMixerImpl[A, B](m: MixerImpl[A, B]): Mixer[A, B] = new Mixer[A, B] {
+    def mix(a: A): B = m.mix(a)
+  }
+}
+
+// This exists to separate the concerns of implicit searches and Mixer building and defaults, which
+// is presented in object Mixer. Code should not use this.
+trait MixerImpl[A, B] {
+  def mix(a: A): B
+}
+
+// TODO: Tidy up implicit structure?
+object MixerImpl extends LowPriorityMixerImplicits1 {
+
+  def apply[A, B](implicit m: MixerImpl[A, B]): MixerImpl[A, B] = m
+
   // If we are dealing with an atom, we can mix it into itself
-  implicit def atomicCase[A: Atom]: Mixer[A, A] = new Mixer[A, A] {
+  implicit def atomicCase[A: Atom]: MixerImpl[A, A] = new MixerImpl[A, A] {
     def mix(a: A): A = a
   }
 
@@ -45,7 +69,7 @@ object Mixer extends LowPriorityMixerImplicits1 {
 trait LowPriorityMixerImplicits1 extends LowPriorityMixerImplicits2 {
 
   // Anything can satisfy HNil
-  implicit def hnilCase[A]: Mixer[A, HNil] = new Mixer[A, HNil] {
+  implicit def hnilCase[A]: MixerImpl[A, HNil] = new MixerImpl[A, HNil] {
     def mix(a: A): HNil = HNil
   }
 
@@ -56,8 +80,8 @@ trait LowPriorityMixerImplicits1 extends LowPriorityMixerImplicits2 {
     hcons: IsHCons.Aux[BOut, BH, BT],
     atom: Atom[BH],
     s: AtomSelector[A, BH],
-    m2: Mixer[A, BT]
-  ): Mixer[A, B] = new Mixer[A, B] {
+    m2: MixerImpl[A, BT]
+  ): MixerImpl[A, B] = new MixerImpl[A, B] {
     def mix(a: A): B = atomiser.from(hcons.cons(s(a), m2.mix(a)))
   }
 
@@ -67,8 +91,8 @@ trait LowPriorityMixerImplicits1 extends LowPriorityMixerImplicits2 {
     hcons: IsHCons.Aux[BOut, M[BH], BT],
     molecule: Molecule[M, BH],
     s: AtomSelector[A, M[BH]],
-    m2: Mixer[A, BT]
-  ): Mixer[A, B] = new Mixer[A, B] {
+    m2: MixerImpl[A, BT]
+  ): MixerImpl[A, B] = new MixerImpl[A, B] {
     def mix(a: A): B = atomiser.from(hcons.cons(s(a), m2.mix(a)))
   }
 
@@ -80,9 +104,9 @@ trait LowPriorityMixerImplicits2 extends LowPriorityMixerImplicits3 {
     implicit atomiser: Atomiser.Aux[B, BOut],
     hcons: IsHCons.Aux[BOut, BH, BT],
     hcons2: IsHCons.Aux[BH, BHH, BHT],
-    m1: Lazy[Mixer[A, BH]],
-    m2: Mixer[A, BT]
-  ): Mixer[A, B] = new Mixer[A, B] {
+    m1: Lazy[MixerImpl[A, BH]],
+    m2: MixerImpl[A, BT]
+  ): MixerImpl[A, B] = new MixerImpl[A, B] {
     def mix(a: A): B = atomiser.from(hcons.cons(m1.value.mix(a), m2.mix(a)))
   }
 }
@@ -93,7 +117,7 @@ trait LowPriorityMixerImplicits3 {
   implicit def bAtomicRecurse[A, B](
     implicit atom: Atom[B],
     s: AtomSelector[A, B]
-  ): Mixer[A, B] = new Mixer[A, B] {
+  ): MixerImpl[A, B] = new MixerImpl[A, B] {
     def mix(a: A): B = s(a)
   }
 
@@ -101,20 +125,8 @@ trait LowPriorityMixerImplicits3 {
   implicit def bMoleculeRecurse[A, M[_], B](
     implicit molecule: Molecule[M, B],
     s: AtomSelector[A, M[B]]
-  ): Mixer[A, M[B]] = new Mixer[A, M[B]] {
+  ): MixerImpl[A, M[B]] = new MixerImpl[A, M[B]] {
     def mix(a: A): M[B] = s(a)
   }
 
 }
-
-object POC {
-
-  Mixer
-    .from[(Int, String)]
-    .to[(Int, String, Boolean, Char)]
-    .withDefault[Boolean](true)
-    .withDefault[Char]('x')
-    .mix(7 -> "s")
-
-}
-

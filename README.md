@@ -2,6 +2,10 @@
 
 This library is intended to give a seamless way to manipulate scala structures into one another, mixing the types intelligently as required
 
+## Installation
+
+You will have to clone the repo and do sbt publishLocal
+
 ## Concepts
 
 ### Mixers
@@ -38,79 +42,119 @@ implicit val atomT: Atom[T] = Atom[T]
 
 Just make sure it's in scope whenever you create a `Mixer`.
 
+### Molecules
+
+A `Molecule` is something beyond a boundary that we can't handle at compile time - for example a `List`. The information
+of how many items are in the source `List` is not known to us, so we can't do anything without some extra help por structure.
+
+That takes the form of recursing inside the `Molecule`, and treating it as its own closed off world of `Atom`s and sub-`Molecules` to
+process. No value from an outer class can make it into a `Molecule`.
+
+A `Molecule` is mixed according to the normal rules:
+
+```scala
+trait A
+trait B
+case class AS(as: List[A])
+case class BS(bs: List[B])
+```
+
+In the above example, `AS` can be mixed into `BS` if and only if `A` can be mixed into `B`.
+
+List is provided for you in the library, for example. In general any `Functor` can be implemented very simply as a molecule.
+
+## Defaults
+
+Sometimes, you want to mix a class into a 'bigger' type. To do this, you must manually create you `Mixer` using the builder provided,
+and give it the required defaults. Ie:
+
+```scala
+case class A(i: Int)
+case class B(i: Int, s: String, b: Boolean)
+
+Mixer[A, B]  // Does not compile
+val m = Mixer.from[A].to[B].withDefault("").withDefault(true).build  // Does compile. This is an instance of `Mixer[A, B]`
+m.mix(A(0)) == B(0, "", true)
+```
+
 ## Complex example
 
 Here's a more complicated example to show what it can do.
 
 ```scala
 // You should follow the philosophy of every value is a type!
-
-case class Age(i: Int)
+// Pretend the following have Atom instances defined in your project:
 case class FirstName(value: String)
 case class LastName(value: String)
 case class Address1(value: String)
-case class Address2(value: String)
 case class City(value: String)
 case class Postcode(value: String)
+case class Title(value: String)
+case class Gender(value: String)
 
-// This is our source data tree
-case class Person(firstName: FirstName, lastName: LastName, age: Age)
-case class Address(a1: Address1, a2: Address2, c: City, p: Postcode)
-case class Resident(p: Person, a: Address)
+// This is our data tree
+case class Address(a1: Address1, c: City, p: Postcode)
+case class Alias(firstName: FirstName, lastName: LastName, isLegal: Boolean)
+case class AddressHistory(values: List[Address])
 
-// This is the tree we will squeeze our data into
-case class FullName(f: FirstName, l: LastName)
-case class PersonAndPostcode(f: FullName, p: Postcode)
-case class PersonAndPostcodeAndAddress(pp: PersonAndPostcode, a1: Address1, a2: Address2, c: City)
+// This is our source data class
+case class Source(
+  firstName: FirstName,
+  lastName: LastName,
+  addressHistory: AddressHistory,
+  aliases: List[(Title, FirstName, LastName)]
+)
 
-// In your project, these will be hidden away. We need them otherwise we
-// get exciting behaviours. See tests for the example
-implicit val a1: Atom[Age] = Atom[Age]
-implicit val a2: Atom[FirstName] = Atom[FirstName]
-implicit val a3: Atom[LastName] = Atom[LastName]
-implicit val a4: Atom[Address1] = Atom[Address1]
-implicit val a5: Atom[Address2] = Atom[Address2]
-implicit val a6: Atom[City] = Atom[City]
-implicit val a7: Atom[Postcode] = Atom[Postcode]
+// This is what we'll be mapping it into
+case class Target(
+  name: (FirstName, LastName),
+  addresses: List[(Address1, Postcode)],
+  aliases: List[Alias],
+  gender: Gender
+)
 
-// Here is our source data
-val resident = Resident(
-  Person(
-    FirstName("Boaty"),
-    LastName("McBoatface"),
-    Age(2)
-  ),
-  Address(
-    Address1("North Pole"),
-    Address2("The Arctic"),
-    City("Northern Hemisphere"),
-    Postcode("N0RT4")
+// We're going to map an intance of Source into an instance of Target
+val source = Source(
+  firstName = FirstName("John"),
+  lastName = LastName("Johnson"),
+  addressHistory = AddressHistory(List(
+    Address(Address1("5 John Street"), City("Johnsville"), Postcode("JOHN")),
+    Address(Address1("5 Jack Street"), City("Jacksville"), Postcode("JACK"))
+  )),
+  aliases = List(
+    (Title("Mr"), FirstName("Johnny"), LastName("Vegas")),
+    (Title("Mr"), FirstName("Jon"), LastName("Snow"))
   )
 )
 
-// Here is the data we expect to get
-val expectedResult: PersonAndPostcodeAndAddress = PersonAndPostcodeAndAddress(
-  PersonAndPostcode(
-    FullName(
-      FirstName("Boaty"),
-      LastName("McBoatface")
-    ),
-    Postcode("N0RT4")
+// We need a Mixer
+
+// First attempt:
+Mixer[Source, Target]  // Won't compile because we have no 'Gender' in our Source
+
+// Second attempt:
+Mixer.from[Source].to[Target].withDefault(Gender("male")).build  // Won't compile because we have no 'isLegal' in our source aliases
+
+// Third attempt:
+implicit val submixer = Mixer.from[(Title, FirstName, LastName)].to[Alias].withDefault(true)
+val mixer = Mixer.from[Source].to[Target].withDefault(Gender("male")).build
+
+val result = mixer.mix(source)
+
+// This test passes!
+result shouldBe Target(
+  name = (FirstName("John"), LastName("Johnson")),
+  addresses = List(
+    (Address1("5 John Street"), Postcode("JOHN")),
+    (Address1("5 Jack Street"), Postcode("JACK"))
   ),
-  Address1("North Pole"),
-  Address2("The Arctic"),
-  City("Northern Hemisphere")
+  aliases = List(
+    Alias(FirstName("Johnny"), LastName("Vegas"), true),
+    Alias(FirstName("Johnny"), LastName("Vegas"), true)
+  ),
+  gender = Gender("male")
 )
-
-// This test passes. See test file
-Mixer[Resident, PersonAndPostcodeAndAddress].mix(allInfo) == expectedResult
 ```
-
-Note in the above example, `Mixer[PersonAndPostcodeAndAddress, Resident]` would not compile because there is no
-`Age` value inside a `PersonAndPostcodeAndAddress` which we can pass over.
-
-If we didn't have the `Atom`s for our types, the program would recurse down to the level of `String` and fill the
-entire right hand side with the first `String` it encountered - in this case `"Boaty"`.
 
 ## The future
 

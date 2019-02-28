@@ -57,11 +57,14 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     AtomSelector[T, Boolean].apply(t) shouldBe true
   }
 
-  it should "select a molecule as-is" in {
+  it should "select a molecule as-is given a mixer" in {
 
     case class A(b: Boolean, s: String)
     case class A2(s: String, b: Boolean)
     case class B(l: List[A])
+
+    // TODO: Generate identity mixer automatically
+    implicit val submixer: Mixer[A, A] = Mixer[A, A]
 
     val b = B(List(A(true, "1"), A(false, "2")))
 
@@ -69,11 +72,13 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     AtomSelector[B, List[A]].apply(b) shouldBe b.l
   }
 
-  it should "be able to select molecules that are mixable rather than precise matches" in {
+  it should "be able to select molecules that are mixable rather than precise matches, given a relevant mixer" in {
 
     case class A(b: Boolean, s: String)
     case class A2(s: String, b: Boolean)
     case class B(l: List[A])
+
+    implicit val submixer: Mixer[A, A2] = Mixer[A, A2]
 
     val b = B(List(A(true, "1"), A(false, "2")))
 
@@ -81,10 +86,12 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     AtomSelector[B, List[A2]].apply(b) shouldBe List(A2("1", true), A2("2", false))
   }
 
-  it should "not allow data from outside the boundary of the molecule into the created molecule structure" in {
+  it should "not allow data from outside the boundary of the molecule into the created molecule structure given a relevant mixer" in {
     case class A(b: Boolean, s: String)
     case class A2(s: String, b: Boolean)
     case class B(a: A, l: List[A])
+
+    implicit val submixer: Mixer[A, A2] = Mixer[A, A2]
 
     val b = B(A(true, "DANGER"), List(A(true, "1"), A(false, "2")))
 

@@ -225,7 +225,7 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[Z, (Int, TestTrait)].mix(Z(5, Testing)) shouldBe 5 -> Testing
   }
 
-  it should "mix up to the boundaries of molecules, and then isolated within those molecules" in {
+  "Mixer on molecules" should "mix up to the boundaries of molecules, and then isolated within those molecules" in {
 
     case class A(i: Int, b: Boolean)
     case class B(i: String)
@@ -247,5 +247,118 @@ class MixerSpec extends FlatSpec with Matchers {
     val target = Target(17, BS(List(b1, b2)), List(true -> 1, false -> 2, true -> 3))
 
     mixer.mix(source) shouldBe target
+  }
+
+  it should "allow custom sub-mixers to be injected, ignoring the default implicits found" in {
+    case class A(i: Int, b: Boolean)
+    case class Source(as: List[A])
+    case class Target(as: List[(Boolean, Int)])
+
+    // A can be Mixed to (Boolean, Int) automatically, but we're overriding that
+    // behaviour with our own
+    implicit val mixer: Mixer[A, (Boolean, Int)] = new Mixer[A, (Boolean, Int)] {
+      def mix(a: A): (Boolean, Int) = a.b -> (a.i + 100)
+    }
+
+    val source = Source(List(A(1, true), A(2, false), A(3, true)))
+    val target = Target(List((true, 101), (false, 102), (true, 103)))
+    Mixer[Source, Target].mix(source) shouldBe target
+  }
+
+  "Mixer with defaults" should "supply a default value" in {
+    case class A(i: Int, b: Boolean, c: Char)
+    case class B(i: Int)
+
+    val mixer: Mixer[B, A] = Mixer.from[B].to[A].withDefault(true).withDefault('d').build
+    mixer.mix(B(5)) shouldBe A(5, true, 'd')
+  }
+
+  it should "be able to be implicitly passed through molecules into sub searches" in {
+    case class A(i: Int, b: Boolean)
+    case class Source(i: Int, s: String, as: List[A])
+    case class Target(i: Int, as: List[(Boolean, Int, Char)], c: Char)
+
+    implicit val aMixer: Mixer[A, (Boolean, Int, Char)] = Mixer.from[A].to[(Boolean, Int, Char)].withDefault('e').build
+    val mixer = Mixer.from[Source].to[Target].withDefault('f').build
+
+    // The 'e' has been inserted in the list, and the 'f' on the outside - different defaults for different mixers
+    val target = Target(17, List((true, 1, 'e'), (false, 2, 'e'), (true, 3, 'e')), 'f')
+    val source = Source(17, "DANGER", List(A(1, true), A(2, false), A(3, true)))
+
+    mixer.mix(source) shouldBe target
+  }
+
+
+  "Mixer" should "combine everything into a very complex test" in {
+    case class FirstName(value: String)
+    case class LastName(value: String)
+    case class Address1(value: String)
+    case class City(value: String)
+    case class Postcode(value: String)
+    case class Title(value: String)
+    case class Gender(value: String)
+
+    // setup
+    implicit val a1: Atom[FirstName] = Atom[FirstName]
+    implicit val a2: Atom[LastName] = Atom[LastName]
+    implicit val a3: Atom[Address1] = Atom[Address1]
+    implicit val a4: Atom[City] = Atom[City]
+    implicit val a5: Atom[Postcode] = Atom[Postcode]
+    implicit val a6: Atom[Title] = Atom[Title]
+    implicit val a7: Atom[Gender] = Atom[Gender]
+
+    // This is our data tree
+    case class Address(a1: Address1, c: City, p: Postcode)
+    case class Alias(firstName: FirstName, lastName: LastName, isLegal: Boolean)
+    case class AddressHistory(values: List[Address])
+
+    case class Source(
+      firstName: FirstName,
+      lastName: LastName,
+      addressHistory: AddressHistory,
+      aliases: List[(Title, FirstName, LastName)]
+    )
+
+    case class Target(
+      name: (FirstName, LastName),
+      addresses: List[(Address1, Postcode)],
+      aliases: List[Alias],
+      gender: Gender
+    )
+
+    // We're going to map an intance of Source into an instance of Target
+    val source = Source(
+      firstName = FirstName("John"),
+      lastName = LastName("Johnson"),
+      addressHistory = AddressHistory(List(
+        Address(Address1("5 John Street"), City("Johnsville"), Postcode("JOHN")),
+        Address(Address1("5 Jack Street"), City("Jacksville"), Postcode("JACK"))
+      )),
+      aliases = List(
+        (Title("Mr"), FirstName("Johnny"), LastName("Vegas")),
+        (Title("Mr"), FirstName("Jon"), LastName("Snow"))
+      )
+    )
+
+    // We need a Mixer for Alias first to supply the missing Boolean
+    implicit val submixer = Mixer.from[(Title, FirstName, LastName)].to[Alias].withDefault(true).build
+    // Now we can mix the whole structure
+    val mixer = Mixer.from[Source].to[Target].withDefault(Gender("male")).build
+
+    val result = mixer.mix(source)
+
+    // This test passes!
+    result shouldBe Target(
+      name = (FirstName("John"), LastName("Johnson")),
+      addresses = List(
+        (Address1("5 John Street"), Postcode("JOHN")),
+        (Address1("5 Jack Street"), Postcode("JACK"))
+      ),
+      aliases = List(
+        Alias(FirstName("Johnny"), LastName("Vegas"), true),
+        Alias(FirstName("Jon"), LastName("Snow"), true)
+      ),
+      gender = Gender("male")
+    )
   }
 }
