@@ -66,26 +66,24 @@ object MixerImpl {
     implicit ev: A =:!= B,
     atomiserB: Atomiser.Aux[B, BOut],
     atomiserA: Atomiser.Aux[A, AOut],
-    m: MixerImplFromAtomised[AOut, BOut]
+    m: Lazy[MixerImplFromAtomised[AOut, BOut]]
   ): MixerImpl[A, B] = new MixerImpl[A, B] {
-    def mix(a: A): B = atomiserB.from(m.mix(atomiserA.to(a)))
+    def mix(a: A): B = atomiserB.from(m.value.mix(atomiserA.to(a)))
   }
 
-  // TODO These belong as MixerImpl implicits
-  // TODO: Test these cases
-    implicit def bIsAtomRecurse[A, B](
-      implicit atom: Atom[B],
-      s: AtomSelector[A, B]
-    ): MixerImpl[A, B] = new MixerImpl[A, B] {
-      def mix(a: A): B = s(a)
-    }
+  implicit def bIsAtomRecurse[A, B](
+    implicit atom: Atom[B],
+    s: AtomSelector[A, B]
+  ): MixerImpl[A, B] = new MixerImpl[A, B] {
+    def mix(a: A): B = s(a)
+  }
 
-    implicit def bIsMoleculeRecurse[A, M[_], B](
-      implicit molecule: Molecule[M, B],
-      s: AtomSelector[A, M[B]]
-    ): MixerImpl[A, M[B]] = new MixerImpl[A, M[B]] {
-      def mix(a: A): M[B] = s(a)
-    }
+  implicit def bIsMoleculeRecurse[A, M[_], B](
+    implicit molecule: Molecule[M, B],
+    s: AtomSelector[A, M[B]]
+  ): MixerImpl[A, M[B]] = new MixerImpl[A, M[B]] {
+    def mix(a: A): M[B] = s(a)
+  }
 
 }
 

@@ -86,6 +86,10 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     AtomSelector[B, List[A2]].apply(b) shouldBe List(A2("1", true), A2("2", false))
   }
 
+  it should "be able to handle reading a molecule from a tuple" in {
+    AtomSelector[(Int, List[(String, Boolean)]), List[String]].apply(5 -> List("0" -> true)) shouldBe List("0")
+  }
+
   it should "not allow data from outside the boundary of the molecule into the created molecule structure given a relevant mixer" in {
     case class A(b: Boolean, s: String)
     case class A2(s: String, b: Boolean)

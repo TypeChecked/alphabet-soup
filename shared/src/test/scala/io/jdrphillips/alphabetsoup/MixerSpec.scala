@@ -278,6 +278,38 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[Source, Target].mix(source) shouldBe target
   }
 
+  it should "work for a medium sized case class with a medium sized sub molecule" in {
+
+    case class X(
+      a: Int,
+      b: String,
+      c: Boolean,
+      l: List[(Int, String, Boolean, Float, Char)])
+
+    case class Y(
+      i: Int,
+      b: String,
+      c: Boolean,
+      l: List[(Float, Char)]
+    )
+
+    val x = X(5, "2", true, List((0, "0", false, 7.6f, 'f')))
+    val y = Y(5, "2", true, List((7.6f, 'f')))
+
+    (Mixer[X, Y].mix(x): Y) shouldBe y
+  }
+
+  it should "work with case classes in molecules" in {
+
+    case class Source(i: Int, b: Boolean)
+    case class Target(i: Int, b: Boolean)
+
+    case class A(sources: List[Source])
+    case class B(targets: List[Target])
+
+    Mixer[A, B]
+  }
+
   "Mixer with defaults" should "supply a default value" in {
     case class A(i: Int, b: Boolean, c: Char)
     case class B(i: Int)
@@ -299,27 +331,6 @@ class MixerSpec extends FlatSpec with Matchers {
     val source = Source(17, "DANGER", List(A(1, true), A(2, false), A(3, true)))
 
     mixer.mix(source) shouldBe target
-  }
-
-  it should "work for a medium sized case class with a medium sized sub molecule" in {
-
-    case class X(
-      a: Int,
-      b: String,
-      c: Boolean,
-      l: List[(Int, String, Boolean, Float, Char)])
-
-    case class Y(
-      i: Int,
-      b: String,
-      c: Boolean,
-      l: List[(Float, Char)]
-    )
-
-    val x = X(5, "2", true, List((0, "0", false, 7.6f, 'f')))
-    val y = Y(5, "2", true, List((7.6f, 'f')))
-
-    (Mixer[X, Y].mix(x): Y) shouldBe y
   }
 
   "Mixer" should "combine everything into a very complex test" in {
