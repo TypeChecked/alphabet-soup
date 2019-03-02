@@ -65,4 +65,7 @@ val shared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(
 lazy val sharedJVM = shared.jvm
 lazy val sharedJS = shared.js
 
-lazy val alphabetSoup = project.in(file(".")).aggregate(sharedJVM, sharedJS)
+lazy val alphabetSoup = project.in(file(".")).aggregate(sharedJVM, sharedJS).settings(
+  commonSettings,
+  publishArtifact := false
+)
