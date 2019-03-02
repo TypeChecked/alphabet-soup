@@ -2,10 +2,10 @@ package io.jdrphillips
 package alphabetsoup
 
 import shapeless.::
+import shapeless.=:!=
 import shapeless.HList
 import shapeless.HNil
 import shapeless.Lazy
-import shapeless.ops.hlist.IsHCons
 
 // This is the version code should use
 trait Mixer[A, B] {
@@ -54,79 +54,82 @@ trait MixerImpl[A, B] {
   def mix(a: A): B
 }
 
-// TODO: Tidy up implicit structure?
-object MixerImpl extends LowPriorityMixerImplicits1 {
+object MixerImpl {
 
   def apply[A, B](implicit m: MixerImpl[A, B]): MixerImpl[A, B] = m
 
-  // If we are dealing with an atom, we can mix it into itself
-  implicit def atomicCase[A: Atom]: MixerImpl[A, A] = new MixerImpl[A, A] {
+  implicit def mixerImplEquality[A]: MixerImpl[A, A] = new MixerImpl[A, A] {
     def mix(a: A): A = a
   }
 
+  implicit def atomiseThenImpl[A, AOut, B, BOut <: HList](
+    implicit ev: A =:!= B,
+    atomiserB: Atomiser.Aux[B, BOut],
+    atomiserA: Atomiser.Aux[A, AOut],
+    m: MixerImplFromAtomised[AOut, BOut]
+  ): MixerImpl[A, B] = new MixerImpl[A, B] {
+    def mix(a: A): B = atomiserB.from(m.mix(atomiserA.to(a)))
+  }
+
+  // TODO These belong as MixerImpl implicits
+  // TODO: Test these cases
+    implicit def bIsAtomRecurse[A, B](
+      implicit atom: Atom[B],
+      s: AtomSelector[A, B]
+    ): MixerImpl[A, B] = new MixerImpl[A, B] {
+      def mix(a: A): B = s(a)
+    }
+
+    implicit def bIsMoleculeRecurse[A, M[_], B](
+      implicit molecule: Molecule[M, B],
+      s: AtomSelector[A, M[B]]
+    ): MixerImpl[A, M[B]] = new MixerImpl[A, M[B]] {
+      def mix(a: A): M[B] = s(a)
+    }
+
 }
 
-trait LowPriorityMixerImplicits1 extends LowPriorityMixerImplicits2 {
+// A mixer that assumes the both sides are atomised
+trait MixerImplFromAtomised[A, B] {
+  def mix(a: A): B
+}
+
+object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
+
+  import AtomSelector.AtomSelectorFromAtomised
+
+  def apply[A, B](implicit m: MixerImplFromAtomised[A, B]): MixerImplFromAtomised[A, B] = m
 
   // Anything can satisfy HNil
-  implicit def hnilCase[A]: MixerImpl[A, HNil] = new MixerImpl[A, HNil] {
+  implicit def hnilCase[A]: MixerImplFromAtomised[A, HNil] = new MixerImplFromAtomised[A, HNil] {
     def mix(a: A): HNil = HNil
   }
 
-  // Atomise B, and if it is an HList split it
-  // If the head is an atom, process it, and recurse on tail
-  implicit def bHListRecurse2[A, B, BOut <: HList, BH, BT <: HList](
-    implicit atomiser: Atomiser.Aux[B, BOut],
-    hcons: IsHCons.Aux[BOut, BH, BT],
-    atom: Atom[BH],
-    s: AtomSelector[A, BH],
-    m2: MixerImpl[A, BT]
-  ): MixerImpl[A, B] = new MixerImpl[A, B] {
-    def mix(a: A): B = atomiser.from(hcons.cons(s(a), m2.mix(a)))
+  implicit def bHeadIsAtomRecurse[A, BH, BT <: HList](
+    implicit atom: Atom[BH],
+    s: AtomSelectorFromAtomised[A, BH],
+    m2: MixerImplFromAtomised[A, BT]
+  ): MixerImplFromAtomised[A, BH :: BT] = new MixerImplFromAtomised[A, BH :: BT] {
+    def mix(a: A): BH :: BT = s(a) :: m2.mix(a)
   }
 
-  // If the head is a molecule, process it, and recurse on tail
-  implicit def bHListRecurse2Molecule[A, B, BOut <: HList, M[_], BH, BT <: HList](
-    implicit atomiser: Atomiser.Aux[B, BOut],
-    hcons: IsHCons.Aux[BOut, M[BH], BT],
-    molecule: Molecule[M, BH],
-    s: AtomSelector[A, M[BH]],
-    m2: MixerImpl[A, BT]
-  ): MixerImpl[A, B] = new MixerImpl[A, B] {
-    def mix(a: A): B = atomiser.from(hcons.cons(s(a), m2.mix(a)))
+  implicit def bHeadIsMoleculeRecurse[A, M[_], BH, BT <: HList](
+    implicit molecule: Molecule[M, BH],
+    s: AtomSelectorFromAtomised[A, M[BH]],
+    m2: MixerImplFromAtomised[A, BT]
+  ): MixerImplFromAtomised[A, M[BH] :: BT] = new MixerImplFromAtomised[A, M[BH] :: BT] {
+    def mix(a: A): M[BH] :: BT = s(a) :: m2.mix(a)
   }
 
 }
 
-trait LowPriorityMixerImplicits2 extends LowPriorityMixerImplicits3 {
-  // Atomise B, and if it is an HList split it and recurse on head and tail after proving head is an HList
-  implicit def bHListRecurse[A, B, BOut <: HList, BH<: HList, BT <: HList, BHH, BHT <: HList](
-    implicit atomiser: Atomiser.Aux[B, BOut],
-    hcons: IsHCons.Aux[BOut, BH, BT],
-    hcons2: IsHCons.Aux[BH, BHH, BHT],
-    m1: Lazy[MixerImpl[A, BH]],
-    m2: MixerImpl[A, BT]
-  ): MixerImpl[A, B] = new MixerImpl[A, B] {
-    def mix(a: A): B = atomiser.from(hcons.cons(m1.value.mix(a), m2.mix(a)))
-  }
-}
+trait LowPriorityMFAImplicits1 {
 
-trait LowPriorityMixerImplicits3 {
-
-  // If B is an atom, select the value from A
-  implicit def bAtomicRecurse[A, B](
-    implicit atom: Atom[B],
-    s: AtomSelector[A, B]
-  ): MixerImpl[A, B] = new MixerImpl[A, B] {
-    def mix(a: A): B = s(a)
-  }
-
-  // If B is a molecule, select the value from A
-  implicit def bMoleculeRecurse[A, M[_], B](
-    implicit molecule: Molecule[M, B],
-    s: AtomSelector[A, M[B]]
-  ): MixerImpl[A, M[B]] = new MixerImpl[A, M[B]] {
-    def mix(a: A): M[B] = s(a)
+  implicit def bHeadIsHListRecurse[A, BT <: HList, BHH, BHT <: HList](
+    implicit m1: Lazy[MixerImplFromAtomised[A, BHH :: BHT]],
+    m2: MixerImplFromAtomised[A, BT]
+  ): MixerImplFromAtomised[A, (BHH :: BHT) :: BT] = new MixerImplFromAtomised[A, (BHH :: BHT) :: BT] {
+    def mix(a: A): (BHH :: BHT) :: BT = m1.value.mix(a) :: m2.mix(a)
   }
 
 }

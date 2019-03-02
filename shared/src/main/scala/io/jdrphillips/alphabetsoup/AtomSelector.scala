@@ -1,6 +1,7 @@
 package io.jdrphillips
 package alphabetsoup
 
+import shapeless.Lazy
 import shapeless.{::, DepFn1, HList}
 
 // TODO rename, now also handles molecules
@@ -20,11 +21,13 @@ object AtomSelector {
   }
 
   // Worker trait
-  trait AtomSelectorFromAtomised[L, U] extends DepFn1[L] with Serializable {
+  trait AtomSelectorFromAtomised[L, U] extends DepFn1[L] {
     type Out = U
   }
 
   object AtomSelectorFromAtomised {
+
+    def apply[L, U](implicit as: AtomSelectorFromAtomised[L, U]): AtomSelectorFromAtomised[L, U] = as
 
     implicit def headSelect[H: Atom, T <: HList]: AtomSelectorFromAtomised[H :: T, H] =
       new AtomSelectorFromAtomised[H :: T, H] {
@@ -36,17 +39,19 @@ object AtomSelector {
         def apply(l: H :: T) = st(l.tail)
       }
 
-    implicit def recurseNested[H <: HList, T <: HList, U: Atom](implicit st: AtomSelectorFromAtomised[H, U]): AtomSelectorFromAtomised[H :: T, U] =
+    implicit def recurseNested[H <: HList, T <: HList, U: Atom](
+      implicit st: Lazy[AtomSelectorFromAtomised[H, U]]
+    ): AtomSelectorFromAtomised[H :: T, U] =
       new AtomSelectorFromAtomised[H :: T, U] {
-        def apply(l: H :: T) = st(l.head)
+        def apply(l: H :: T) = st.value(l.head)
       }
 
     implicit def fuzzyHeadSelectMolecule[M[_], A, T <: HList, B](
       implicit molecule: Molecule[M, B],
-      mixer: Mixer[A, B]
+      mixer: Lazy[Mixer[A, B]]
     ): AtomSelectorFromAtomised[M[A] :: T, M[B]] =
       new AtomSelectorFromAtomised[M[A] :: T, M[B]] {
-        def apply(t: M[A] :: T): M[B] = molecule.functor.map(t.head)(mixer.mix)
+        def apply(t: M[A] :: T): M[B] = molecule.functor.map(t.head)(mixer.value.mix)
       }
 
     implicit def recurseTailMolecule[H, T <: HList, M[_], U](
@@ -59,10 +64,10 @@ object AtomSelector {
 
     implicit def recurseHeadMolecule[H <: HList, T <: HList, U, M[_]](
       implicit molecule: Molecule[M, U],
-      st: AtomSelectorFromAtomised[H, M[U]]
+      st: Lazy[AtomSelectorFromAtomised[H, M[U]]]
     ): AtomSelectorFromAtomised[H :: T, M[U]] =
       new AtomSelectorFromAtomised[H :: T, M[U]] {
-        def apply(l: H :: T) = st(l.head)
+        def apply(l: H :: T) = st.value(l.head)
       }
 
   }

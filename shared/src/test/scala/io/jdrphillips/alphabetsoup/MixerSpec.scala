@@ -40,6 +40,19 @@ class MixerSpec extends FlatSpec with Matchers {
     illTyped("""Mixer[Int, String]""")
   }
 
+  it should "read simple atoms from the LHS" in {
+    Mixer[(Int, String), Int].mix(5 -> "hello") shouldBe 5
+  }
+
+  it should "read simple molecules from the LHS" in {
+    Mixer[(Int, List[String]), List[String]].mix(5 -> List("hello", "two", "three")) shouldBe List("hello", "two", "three")
+  }
+
+  it should "read fuzzy molecules from the LHS" in {
+    val m = Mixer[(Int, List[(String, Boolean)]), List[String]]
+    m.mix(5 -> List("hello" -> true, "two" -> false)) shouldBe List("hello", "two")
+  }
+
   it should "work on simple one-length transformations" in {
     val string = "hello"
 
@@ -288,6 +301,26 @@ class MixerSpec extends FlatSpec with Matchers {
     mixer.mix(source) shouldBe target
   }
 
+  it should "work for a medium sized case class with a medium sized sub molecule" in {
+
+    case class X(
+      a: Int,
+      b: String,
+      c: Boolean,
+      l: List[(Int, String, Boolean, Float, Char)])
+
+    case class Y(
+      i: Int,
+      b: String,
+      c: Boolean,
+      l: List[(Float, Char)]
+    )
+
+    val x = X(5, "2", true, List((0, "0", false, 7.6f, 'f')))
+    val y = Y(5, "2", true, List((7.6f, 'f')))
+
+    (Mixer[X, Y].mix(x): Y) shouldBe y
+  }
 
   "Mixer" should "combine everything into a very complex test" in {
     case class FirstName(value: String)
