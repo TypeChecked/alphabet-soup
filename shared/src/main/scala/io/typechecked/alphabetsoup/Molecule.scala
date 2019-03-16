@@ -1,4 +1,4 @@
-package io.jdrphillips
+package io.typechecked
 package alphabetsoup
 
 import cats.Functor

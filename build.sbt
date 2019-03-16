@@ -10,9 +10,9 @@ resolvers ++= Seq (
 
 lazy val commonSettings = Seq(
   name := "alphabet-soup",
-  version := "0.1.2-SNAPSHOT",
+  version := "0.2.0-SNAPSHOT",
   scalaVersion := "2.12.8",
-  organization := "io.jdrphillips",
+  organization := "io.typechecked",
   addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
 
   libraryDependencies ++= Seq(
