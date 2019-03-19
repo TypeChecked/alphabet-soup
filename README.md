@@ -45,7 +45,7 @@ Just make sure it's in scope whenever you create a `Mixer`.
 ### Molecules
 
 A `Molecule` is something beyond a boundary that we can't handle at compile time - for example a `List`. The information
-of how many items are in the source `List` is not known to us, so we can't do anything without some extra help por structure.
+of how many items are in the source `List` is not known to us, so we can't do anything without some extra help or structure.
 
 That takes the form of recursing inside the `Molecule`, and treating it as its own closed off world of `Atom`s and sub-`Molecules` to
 process. No value from an outer class can make it into a `Molecule`.
@@ -65,7 +65,7 @@ List is provided for you in the library, for example. In general any `Functor` c
 
 ## Defaults
 
-Sometimes, you want to mix a class into a 'bigger' type. To do this, you must manually create you `Mixer` using the builder provided,
+Sometimes, you want to mix a class into a 'bigger' type. To do this, you must manually create your `Mixer` using the builder provided,
 and give it the required defaults. Ie:
 
 ```scala
