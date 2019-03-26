@@ -4,7 +4,8 @@ This library is intended to give a seamless way to manipulate scala structures i
 
 ## Installation
 
-You will have to clone the repo and do sbt publishLocal
+- Clone the repo
+- `sbt publishM2` OR `sbt sharedJVM/publishLocal` (the scalaJS dependency causes a race condition when you `publishLocal`, and it fails doing both at the same time)
 
 ## Concepts
 
