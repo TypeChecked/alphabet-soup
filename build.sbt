@@ -8,12 +8,19 @@ resolvers ++= Seq (
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
+val publishLocalReleaseStep = ReleaseStep(releaseStepCommand("publishLocal"))
+
 lazy val commonSettings = Seq(
   name := "alphabet-soup",
-  version := "0.2.0-SNAPSHOT",
   scalaVersion := "2.12.8",
   organization := "io.typechecked",
   addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
+
+  // sbt-release plugin settings
+  releaseUseGlobalVersion := true,
+  // Replace 'publish' step with 'publishLocal' step
+  releaseProcess -= ReleaseTransformations.publishArtifacts,
+  releaseProcess += publishLocalReleaseStep,
 
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
