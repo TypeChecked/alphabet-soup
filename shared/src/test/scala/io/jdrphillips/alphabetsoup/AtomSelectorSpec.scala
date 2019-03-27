@@ -12,6 +12,7 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
   case class T(p: Pair, b: Boolean)
 
   "AtomSelector" should "not work on atoms" in {
+
     illTyped("AtomSelector[Int, Int]")
   }
 
@@ -102,5 +103,62 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     // The initial 'A' value in b is NOT used in the construction of our molecule List[A2]
     AtomSelector[B, List[A2]].apply(b) shouldBe List(A2("1", true), A2("2", false))
   }
+
+  it should "not atom select when no default is supplied" in {
+    case class A(a: Int)
+    illTyped("AtomSelector[A, String].apply(A(7))")
+  }
+
+  it should "atom select when a default is supplied" in {
+    case class A(a: Int)
+
+    implicit val default: Atom.DefaultAtom[String] = Atom.DefaultAtom("default")
+
+    AtomSelector[A, String].apply(A(7)) shouldBe "default"
+
+  }
+
+  it should "not select when a default of wrong type is supplied" in {
+    case class A(a: Int)
+
+    implicit val default: Atom.DefaultAtom[Int] = Atom.DefaultAtom(5)
+
+    illTyped("AtomSelector[A, String].apply(A(7))")
+
+  }
+
+  it should "atom select from when a default is supplied for a complex type" in {
+
+    case class A(a: Int)
+
+    type Complex = (String, Int, (Boolean, Long))
+    val complex = ("", 5, (false, 10L))
+
+    implicit val default: Atom.DefaultAtom[Complex] = Atom.DefaultAtom(complex)
+
+    AtomSelector[A, Complex].apply(A(7)) shouldBe complex
+
+  }
+
+  it should "always find DefaultAtom[HNil] and DefaultAtom[Unit" in {
+
+    case class A(i: Int)
+
+    AtomSelector[A, HNil].apply(A(7)) shouldBe HNil
+    
+    AtomSelector[A, Unit].apply(A(7)) shouldBe (())
+
+    illTyped("AtomSelector[A, (HNil, Unit)].apply(A(7))")
+
+  }
+
+  it should "not find a tuple of (HNil, Unit)" in {
+    case class A(i: Int)
+
+    illTyped("AtomSelector[A, (HNil, Unit)].apply(A(7))")
+
+  } 
+
+
 
 }
