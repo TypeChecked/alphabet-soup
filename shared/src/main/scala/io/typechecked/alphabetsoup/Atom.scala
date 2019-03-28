@@ -17,7 +17,7 @@ object Atom {
   implicit val doubleAtom: Atom[Double] = new Atom[Double] {}
   implicit val longAtom: Atom[Long] = new Atom[Long] {}
 
-  trait DefaultAtomImpl[T] {
+  private[io.typechecked] trait DefaultAtomImpl[T] {
     def asDefaultAtom(value: T): DefaultAtom[T] = new DefaultAtom[T] {
       def default: T = value
     }
@@ -36,12 +36,10 @@ object Atom {
     implicit def forbidMoleculeAmbiguous[T[_], A](implicit ev: Molecule[T, A]): DefaultAtomImpl[T[A]] = new DefaultAtomImpl[T[A]]{}
     implicit def forbidMoleculeAmbiguous1[T[_], A](implicit ev: Molecule[T, A]): DefaultAtomImpl[T[A]] = new DefaultAtomImpl[T[A]]{}
 
-   // freeDefaultAtomImpl[List[String]]
-   // forbidMoleculeAmbiguous[List, String]
 
   }
   trait LowerPriorityDefaultAtomImpl{
-        implicit def freeDefaultAtomImpl[T]: DefaultAtomImpl[T] = new DefaultAtomImpl[T] {}
+    implicit def freeDefaultAtomImpl[T]: DefaultAtomImpl[T] = new DefaultAtomImpl[T] {}
   }
 
   implicit val hnilAtom: DefaultAtom[HNil] = DefaultAtom.apply[HNil](HNil)
