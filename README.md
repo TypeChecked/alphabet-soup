@@ -66,8 +66,26 @@ List is provided for you in the library, for example. In general any `Functor` c
 
 ## Defaults
 
-Sometimes, you want to mix a class into a 'bigger' type. To do this, you must manually create your `Mixer` using the builder provided,
-and give it the required defaults. Ie:
+There are two ways of creating defaults in alphabet-soup.
+
+The first is to create a `DefaultAtom[T]` 
+
+```scala
+case class A(i: Int)
+case class B(i: Int, s: String)
+
+implicit val default: DefaultAtom[String] = DefaultAtom("some default string")
+
+val mixer = Mixer[A,B]
+
+mixer.mix(A(1))
+```
+This produces `B(1, "some default string")`
+
+This can be useful if you want to create default values for types which do not possess much information.
+
+the second way of creating defaults often comes in handy when you want to mix a class into a 'bigger' type. 
+To do this, you must manually create your `Mixer` using the builder provided, and give it the required defaults. Ie:
 
 ```scala
 case class A(i: Int)

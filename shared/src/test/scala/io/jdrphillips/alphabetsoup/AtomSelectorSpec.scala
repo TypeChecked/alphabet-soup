@@ -1,8 +1,7 @@
 package io.typechecked
 package alphabetsoup
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest._
 import shapeless.{::, Generic, HNil}
 import shapeless.test.illTyped
 
@@ -12,6 +11,7 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
   case class T(p: Pair, b: Boolean)
 
   "AtomSelector" should "not work on atoms" in {
+
     illTyped("AtomSelector[Int, Int]")
   }
 
@@ -102,5 +102,4 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     // The initial 'A' value in b is NOT used in the construction of our molecule List[A2]
     AtomSelector[B, List[A2]].apply(b) shouldBe List(A2("1", true), A2("2", false))
   }
-
 }

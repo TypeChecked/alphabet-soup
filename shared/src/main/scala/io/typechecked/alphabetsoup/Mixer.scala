@@ -94,7 +94,7 @@ trait MixerImplFromAtomised[A, B] {
 
 object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
 
-  import AtomSelector.AtomSelectorFromAtomised
+  import AtomSelector.AtomiseOrDefaultSelector
 
   def apply[A, B](implicit m: MixerImplFromAtomised[A, B]): MixerImplFromAtomised[A, B] = m
 
@@ -105,7 +105,7 @@ object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
 
   implicit def bHeadIsAtomRecurse[A, BH, BT <: HList](
     implicit atom: Atom[BH],
-    s: AtomSelectorFromAtomised[A, BH],
+    s: AtomiseOrDefaultSelector[A, BH],
     m2: MixerImplFromAtomised[A, BT]
   ): MixerImplFromAtomised[A, BH :: BT] = new MixerImplFromAtomised[A, BH :: BT] {
     def mix(a: A): BH :: BT = s(a) :: m2.mix(a)
@@ -113,7 +113,7 @@ object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
 
   implicit def bHeadIsMoleculeRecurse[A, M[_], BH, BT <: HList](
     implicit molecule: Molecule[M, BH],
-    s: AtomSelectorFromAtomised[A, M[BH]],
+    s: AtomiseOrDefaultSelector[A, M[BH]],
     m2: MixerImplFromAtomised[A, BT]
   ): MixerImplFromAtomised[A, M[BH] :: BT] = new MixerImplFromAtomised[A, M[BH] :: BT] {
     def mix(a: A): M[BH] :: BT = s(a) :: m2.mix(a)
