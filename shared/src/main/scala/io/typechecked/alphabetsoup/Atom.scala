@@ -31,11 +31,17 @@ object Atom {
     def apply[T](arg: T)(implicit impl: DefaultAtomImpl[T]): DefaultAtom[T] = impl.asDefaultAtom(arg)
   }
 
-  object DefaultAtomImpl {
-    implicit def freeDefaultAtomImpl[T]: DefaultAtomImpl[T] = new DefaultAtomImpl[T] {}
+  object DefaultAtomImpl extends LowerPriorityDefaultAtomImpl {
 
     implicit def forbidMoleculeAmbiguous[T[_], A](implicit ev: Molecule[T, A]): DefaultAtomImpl[T[A]] = new DefaultAtomImpl[T[A]]{}
+    implicit def forbidMoleculeAmbiguous1[T[_], A](implicit ev: Molecule[T, A]): DefaultAtomImpl[T[A]] = new DefaultAtomImpl[T[A]]{}
 
+   // freeDefaultAtomImpl[List[String]]
+   // forbidMoleculeAmbiguous[List, String]
+
+  }
+  trait LowerPriorityDefaultAtomImpl{
+        implicit def freeDefaultAtomImpl[T]: DefaultAtomImpl[T] = new DefaultAtomImpl[T] {}
   }
 
   implicit val hnilAtom: DefaultAtom[HNil] = DefaultAtom.apply[HNil](HNil)

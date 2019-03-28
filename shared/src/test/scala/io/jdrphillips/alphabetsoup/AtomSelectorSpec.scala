@@ -125,13 +125,7 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     illTyped("AtomSelector[A, String].apply(A(7))")
 
   }
-
-  it should "not compile defaults for molecules" in {
-
-    illTyped("""Atom.DefaultAtom[List[String]]""")
-
-  }
-
+  
   it should "atom select when a default is supplied for a complex type" in {
 
     case class A(a: Int)

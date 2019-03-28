@@ -9,6 +9,12 @@ import shapeless.test.illTyped
 
 class DefaultAtomSpec extends FlatSpec with Matchers {
 
+  "DefaultAtom" should "not compile defaults for molecules" in {
+
+    illTyped("""Atom.DefaultAtom[List[String]](List("No!"))""")
+
+  }
+
   "Mixer" should "work with a supplied default" in {
 
     case class Source(a: Int)
@@ -80,28 +86,6 @@ class DefaultAtomSpec extends FlatSpec with Matchers {
     val mixer = Mixer[Source, Target]
 
     mixer.mix(Source("Choose me!")) shouldBe Target("Choose me!")
-  }
-  // Weird behaviour here, the default overrides the Left when it is a Molecule
-  it should "ignore default when molecule exists" in {
-    case class Source(a: List[String])
-    case class Target(a: List[String])
-
-    implicit val default: Atom.DefaultAtom[List[String]] = Atom.DefaultAtom(List("default"))
-
-    val mixer = Mixer[Source, Target]
-
-    mixer.mix(Source(List("Choose me!"))) shouldBe Target(List("default"))
-  }
-
-  it should "override molecule behaviour with default" in {
-    case class Source(a: Int)
-    case class Target(a: Int, b: List[String], c: Unit)
-
-    implicit val default: Atom.DefaultAtom[List[String]] = Atom.DefaultAtom(List("default"))
-
-    val mixer = Mixer[Source, Target]
-
-    mixer.mix(Source(1)) shouldBe Target(1, List("default"), ())
   }
 
   it should "work when it finds a HNil before traversing entire structure" in {
