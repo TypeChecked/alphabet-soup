@@ -11,16 +11,16 @@ class DefaultAtomSpec extends FlatSpec with Matchers {
 
   "Mixer" should "work with a supplied default" in {
 
-  case class Source(a: Int)
-  case class Target(a: Int, b: String)
+    case class Source(a: Int)
+    case class Target(a: Int, b: String)
 
-  implicit val default: Atom.DefaultAtom[String] = Atom.DefaultAtom("default")
+    implicit val default: Atom.DefaultAtom[String] = Atom.DefaultAtom("default")
 
-  val mixer = Mixer[Source, Target]
+    val mixer = Mixer[Source, Target]
 
-  val source = Source(1)
+    val source = Source(1)
 
-  mixer.mix(source) shouldBe Target(1, "default")
+    mixer.mix(source) shouldBe Target(1, "default")
 
   }
   it should "return types from left ignoring default" in {
