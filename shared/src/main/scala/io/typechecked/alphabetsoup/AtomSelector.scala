@@ -2,17 +2,16 @@ package io.typechecked
 package alphabetsoup
 
 import shapeless.Lazy
-import shapeless.{::, DepFn1, HList}
+import shapeless.{::, HList}
 
 // TODO rename, now also handles molecules
-trait AtomSelector[L, U] extends DepFn1[L] {
-  type Out = U
+trait AtomSelector[L, U] {
+  def apply(l: L): U
 }
 
 object AtomSelector {
 
   def apply[L, U](implicit atomSelector: AtomSelector[L, U]): AtomSelector[L, U] = atomSelector
-
 
   implicit def atomiseThenDelegate[L, LOut, U](
     implicit dg: Atomiser.Aux[L, LOut],
@@ -21,20 +20,20 @@ object AtomSelector {
     def apply(t: L): U = s(dg.to(t))
   }
 
-  trait AtomiseOrDefaultSelector[L, U] extends DepFn1[L] {
-    type Out = U
+  trait AtomiseOrDefaultSelector[L, U] {
+    def apply(l: L): U
   }
 
   object AtomiseOrDefaultSelector extends LowPriorityAtomiseOrDefaultSelector{
 
-    implicit def fromAtomSelectorFromAtomised[L, U](implicit atomise: AtomSelectorFromAtomised[L, U]): AtomiseOrDefaultSelector[L, U] = 
+    implicit def fromAtomSelectorFromAtomised[L, U](implicit atomise: AtomSelectorFromAtomised[L, U]): AtomiseOrDefaultSelector[L, U] =
       new AtomiseOrDefaultSelector[L, U] {
         def apply(l: L): U = atomise.apply(l)
     }
 
     // Worker trait
-    trait AtomSelectorFromAtomised[L, U] extends DepFn1[L] {
-      type Out = U
+    trait AtomSelectorFromAtomised[L, U] {
+      def apply(l: L): U
     }
 
     object AtomSelectorFromAtomised {
