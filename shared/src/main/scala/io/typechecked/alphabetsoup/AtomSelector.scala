@@ -16,19 +16,19 @@ object AtomSelector {
 
   implicit def atomiseThenDelegate[L, LOut, U](
     implicit dg: Atomiser.Aux[L, LOut],
-    s: InnerAtomSelector[LOut, U]
+    s: AtomiseOrDefaultSelector[LOut, U]
   ): AtomSelector[L, U] = new AtomSelector[L, U] {
     def apply(t: L): U = s(dg.to(t))
   }
 
-  trait InnerAtomSelector[L, U] extends DepFn1[L] {
+  trait AtomiseOrDefaultSelector[L, U] extends DepFn1[L] {
     type Out = U
   }
 
-  object InnerAtomSelector extends LowPriorityInnerAtomSelector{
+  object AtomiseOrDefaultSelector extends LowPriorityAtomiseOrDefaultSelector{
 
-    implicit def atomSelectorFromAtomised[L, U](implicit atomise: AtomSelectorFromAtomised[L, U]): InnerAtomSelector[L, U] = 
-      new InnerAtomSelector[L, U] {
+    implicit def fromAtomSelectorFromAtomised[L, U](implicit atomise: AtomSelectorFromAtomised[L, U]): AtomiseOrDefaultSelector[L, U] = 
+      new AtomiseOrDefaultSelector[L, U] {
         def apply(l: L): U = atomise.apply(l)
     }
 
@@ -84,8 +84,8 @@ object AtomSelector {
     }
   }
 
-  trait LowPriorityInnerAtomSelector {
-    implicit def defaultAtomSelector[L, U](implicit defaultAS: Atom.DefaultAtom[U]) = new InnerAtomSelector[L, U] {
+  trait LowPriorityAtomiseOrDefaultSelector {
+    implicit def defaultAtomSelector[L, U](implicit defaultAS: Atom.DefaultAtom[U]) = new AtomiseOrDefaultSelector[L, U] {
       def apply(l: L): U = defaultAS.default
     }
   }

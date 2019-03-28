@@ -1,8 +1,7 @@
 package io.typechecked
 package alphabetsoup
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest._
 import shapeless.{::, Generic, HNil}
 import shapeless.test.illTyped
 
@@ -127,7 +126,13 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "atom select from when a default is supplied for a complex type" in {
+  it should "not compile defaults for molecules" in {
+
+    illTyped("""Atom.DefaultAtom[List[String]]""")
+
+  }
+
+  it should "atom select when a default is supplied for a complex type" in {
 
     case class A(a: Int)
 
@@ -140,7 +145,7 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "always find DefaultAtom[HNil] and DefaultAtom[Unit" in {
+  it should "always find DefaultAtom[HNil] and DefaultAtom[Unit]" in {
 
     case class A(i: Int)
 
@@ -158,6 +163,15 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
     illTyped("AtomSelector[A, (HNil, Unit)].apply(A(7))")
 
   } 
+
+  it should "accept DefaultAtom as an Atom" in {
+    trait A
+    illTyped("implicitly[Atom[A]]")
+    val _ = {
+      implicit val default: Atom.DefaultAtom[A] = Atom.DefaultAtom[A](new A{})
+      "implicitly[Atom[A]]" should compile
+    }
+  }
 
 
 

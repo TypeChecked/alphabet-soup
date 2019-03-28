@@ -71,6 +71,28 @@ class DefaultAtomSpec extends FlatSpec with Matchers {
     mixer.mix(Source(1, List(Tuple1(10L)))) shouldBe Target(1, List((10L,"default")))
   }
 
+  it should "ignore default when atom exists" in {
+    case class Source(a: String)
+    case class Target(a: String)
+
+    implicit val default: Atom.DefaultAtom[String] = Atom.DefaultAtom("default")
+
+    val mixer = Mixer[Source, Target]
+
+    mixer.mix(Source("Choose me!")) shouldBe Target("Choose me!")
+  }
+  // Weird behaviour here, the default overrides the Left when it is a Molecule
+  it should "ignore default when molecule exists" in {
+    case class Source(a: List[String])
+    case class Target(a: List[String])
+
+    implicit val default: Atom.DefaultAtom[List[String]] = Atom.DefaultAtom(List("default"))
+
+    val mixer = Mixer[Source, Target]
+
+    mixer.mix(Source(List("Choose me!"))) shouldBe Target(List("default"))
+  }
+
   it should "override molecule behaviour with default" in {
     case class Source(a: Int)
     case class Target(a: Int, b: List[String], c: Unit)
@@ -111,6 +133,17 @@ class DefaultAtomSpec extends FlatSpec with Matchers {
     mixer.mix(Source(1)) shouldBe Target(1, "I AM THE REAL DEFAULT")
 
 
+  }
+
+  it should "work in conjunction with DefaultAtom" in {
+    case class Source(a: Int)
+    case class Target(a: Int, b: String, c: Long)
+
+    implicit val default: Atom.DefaultAtom[String] = Atom.DefaultAtom("Default Brah")
+
+    val mixer = Mixer.from[Source].to[Target].withDefault(69L).build
+
+    mixer.mix(Source(1)) shouldBe Target(1, "Default Brah", 69L)
   }
 
 }

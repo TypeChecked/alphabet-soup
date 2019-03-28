@@ -17,16 +17,25 @@ object Atom {
   implicit val doubleAtom: Atom[Double] = new Atom[Double] {}
   implicit val longAtom: Atom[Long] = new Atom[Long] {}
 
-
-  trait DefaultAtom[T] extends Atom[T] {
-    val default: T
-
+  trait DefaultAtomImpl[T] {
+    def asDefaultAtom(value: T): DefaultAtom[T] = new DefaultAtom[T] {
+      def default: T = value
+    }
   }
 
-  object DefaultAtom  {
-    def apply[T](arg: T): DefaultAtom[T] = new DefaultAtom[T]{
-      val default: T = arg
-    }
+  sealed trait DefaultAtom[T] extends Atom[T] {
+    def default: T
+  }
+
+  object DefaultAtom {
+    def apply[T](arg: T)(implicit impl: DefaultAtomImpl[T]): DefaultAtom[T] = impl.asDefaultAtom(arg)
+  }
+
+  object DefaultAtomImpl {
+    implicit def freeDefaultAtomImpl[T]: DefaultAtomImpl[T] = new DefaultAtomImpl[T] {}
+
+    implicit def forbidMoleculeAmbiguous[T[_], A](implicit ev: Molecule[T, A]): DefaultAtomImpl[T[A]] = new DefaultAtomImpl[T[A]]{}
+
   }
 
   implicit val hnilAtom: DefaultAtom[HNil] = DefaultAtom.apply[HNil](HNil)
