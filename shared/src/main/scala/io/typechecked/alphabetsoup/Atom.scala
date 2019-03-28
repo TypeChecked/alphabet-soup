@@ -17,7 +17,7 @@ object Atom {
   implicit val doubleAtom: Atom[Double] = new Atom[Double] {}
   implicit val longAtom: Atom[Long] = new Atom[Long] {}
 
-  private[io.typechecked] trait DefaultAtomImpl[T] {
+  private[typechecked] trait DefaultAtomImpl[T] {
     def asDefaultAtom(value: T): DefaultAtom[T] = new DefaultAtom[T] {
       def default: T = value
     }
