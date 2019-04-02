@@ -16,11 +16,44 @@ lazy val commonSettings = Seq(
   organization := "io.typechecked",
   addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
 
+  credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credential"),
+
+  useGpg := true,
+  ThisBuild / organization := "io.typechecked",
+  ThisBuild / organizationName := "alphabet-soup",
+  ThisBuild / organizationHomepage := Some(url("http://typechecked.io")),
+
+  ThisBuild / scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/TypeChecked/alphabet-soup"),
+      "scm:git@github.com:TypeChecked/alphabet-soup.git"
+    )
+  ),
+
+  ThisBuild / developers := List(
+    Developer(
+      id    = "jdrphillips",
+      name  = "James Phillips",
+      email = "me@jdrphillips.io",
+      url   = url("http://jdrphillips.io")
+    )
+  ),
+
+  ThisBuild / licenses := List("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+  ThisBuild / homepage := Some(url("https://github.com/TypeChecked/alphabet-soup")),
+
+  // Remove all additional repository other than Maven Central from POM
+  ThisBuild / pomIncludeRepository := { _ => false },
+  ThisBuild / publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  },
+  ThisBuild / publishMavenStyle := true,
+
   // sbt-release plugin settings
   releaseUseGlobalVersion := true,
-  // Replace 'publish' step with 'publishLocal' step
-  releaseProcess -= ReleaseTransformations.publishArtifacts,
-  releaseProcess += publishLocalReleaseStep,
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
 
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
