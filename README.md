@@ -2,10 +2,17 @@
 
 This library is intended to give a seamless way to manipulate scala structures into one another, mixing the types intelligently as required
 
+For a whistle-stop tour of the underlying algorithm, see [here](https://medium.com/@jdrphillips/alphabet-soup-type-level-transformations-eb60918af35d)
+
 ## Installation
 
-- Clone the repo
-- `sbt publishM2` OR `sbt sharedJVM/publishLocal` (the scalaJS dependency causes a race condition when you `publishLocal`, and it fails doing both at the same time)
+Releases are available on Maven. Add the following to your build.sbt:
+
+```
+"io.typechecked" %% "alphabet-soup" % "<version>"
+```
+
+for the version of your choice. The project is fully tagged and release versions are available to view online.
 
 ## Concepts
 
@@ -68,7 +75,7 @@ List is provided for you in the library, for example. In general any `Functor` c
 
 There are two ways of creating defaults in alphabet-soup.
 
-The first is to create a `DefaultAtom[T]` 
+The first is to create a `DefaultAtom[T]`:
 
 ```scala
 case class A(i: Int)
@@ -84,8 +91,10 @@ This produces `B(1, "some default string")`
 
 This can be useful if you want to create default values for types which do not possess much information.
 
-the second way of creating defaults often comes in handy when you want to mix a class into a 'bigger' type. 
-To do this, you must manually create your `Mixer` using the builder provided, and give it the required defaults. Ie:
+`HNil` and `Unit` have provided `DefaultAtom`s.
+
+The second way of creating defaults often comes in handy when you want to mix a class into a bigger type on a one-time basis.
+To do this, you must manually create your `Mixer` using the builder provided, and give it the required defaults. For example:
 
 ```scala
 case class A(i: Int)
@@ -177,8 +186,7 @@ result shouldBe Target(
 
 ## The future
 
-This library will be extended to handle functional `Atom`s, which contain within them a way to transform one type
-to another.
+This library will be extended to:
 
-It will also acquire a version which works on a "by field name" basis for case classes, rather than by type. One nice
-thing about the version above is that it works for essentially any product type: `Tuple`, `HList`, `case class`, etc.
+* handle functional `Atom`s, which contain within them a way to transform one type to another
+* have a "strict" version, which will prevent duplicate types in the source of the mixer
