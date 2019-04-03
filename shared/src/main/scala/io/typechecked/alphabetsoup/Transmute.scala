@@ -11,7 +11,7 @@ object Transmute {
   def apply[A: Atom, B: Atom](f: A => B): Transmute[A, B] =
     new Transmute[A, B] {
 
-     def convert: A => B = f
+      def convert: A => B = f
 
   }
 }
