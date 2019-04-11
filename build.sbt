@@ -59,6 +59,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.12.8",
   organization := "io.typechecked",
   addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
 
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
@@ -106,13 +107,11 @@ lazy val commonSettings = Seq(
 
 val macroShared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("macros")).settings(
   name := "macros",
-  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   commonSettings)
 
 // TODO: Put back in root directory?
 val shared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("shared")).settings(
   name := "alphabet-soup",
-  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   commonSettings ++ publishingSettings)
 
 lazy val macroJVM = macroShared.jvm
@@ -120,8 +119,7 @@ lazy val sharedJVM = shared.jvm.dependsOn(macroJVM)
 lazy val macroJS = macroShared.js
 lazy val sharedJS = shared.js.dependsOn(macroJS)
 
-lazy val alphabetSoup = project.in(file(".")).aggregate(sharedJVM, sharedJS).settings(
+lazy val alphabetSoup = project.in(file(".")).aggregate( macroJVM, macroJS, sharedJVM, sharedJS).settings(
   commonSettings,
-  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   publishArtifact := false
 )
