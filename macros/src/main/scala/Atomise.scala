@@ -12,17 +12,32 @@ object AtomicMacro {
   def impl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
 
-    val result = {
-      annottees.map(_.tree).toList match {
-        case q"case class $className(..$fields){ ..$body }" :: Nil => {
-          q""" 
-             case class $className(..$fields){ ..$body }
-             implicit val ${className.toTermName + "_atom"}: Atom[$className] = Atom[$className]
-          """
-        }
-        case _ => c.abort(c.enclosingPosition, "Annotation @Atomic can be used only with case classes")
+    def atomFormatter(className: TypeName) = {
+        q"""object ${className.toTermName} { implicit val ${TermName(className.toTermName.toString + "atom")}: Atom[$className] = Atom[$className] }"""
+    }
+
+    def extractClassName(classDecl: ClassDef) = {
+      try {
+        val q"case class $className(..$fields) extends ..$bases { ..$body }" = classDecl
+        className
+      } catch {
+        case _: MatchError => c.abort(c.enclosingPosition, "Annotation is only supported on case class")
       }
     }
-    c.Expr[Any](result)
+
+    def modifiedClass(classDecl: ClassDef) = {
+      val className = extractClassName(classDecl)
+      val companion = atomFormatter(className)
+
+      c.Expr(q"""
+        $classDecl
+        $companion
+      """)
+    }
+
+    annottees.map(_.tree).toList match {
+        case (classDecl: ClassDef) :: Nil => modifiedClass(classDecl)
+        case _ => c.abort(c.enclosingPosition, "Invalid Annotee")
+      }
   }
 }
