@@ -1,4 +1,6 @@
-package io.typechecked.macros
+package io.typechecked
+package alphabetsoup
+package macros
 
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
