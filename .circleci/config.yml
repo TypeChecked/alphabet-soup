@@ -26,4 +26,4 @@ jobs:
           key: v1-dependencies--{{ checksum "build.sbt" }}
 
       # run tests!
-      - run: cat /dev/null | sbt sharedJVM/test
+      - run: cat /dev/null | sbt alphabetSoupJVM/test
