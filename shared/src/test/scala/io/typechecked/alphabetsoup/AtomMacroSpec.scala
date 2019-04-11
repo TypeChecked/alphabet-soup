@@ -130,7 +130,7 @@ class AtomMacroSpec extends FlatSpec with Matchers {
 		implicitly[Atom[C]]
 
 	}
-	it should "" in {
+	it should "create an implicit Atom for a class defined inside a function" in {
 		def foo = {
 			@Atomic class A
 
