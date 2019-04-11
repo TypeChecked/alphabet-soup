@@ -10,11 +10,9 @@ resolvers ++= Seq (
 
 val publishLocalReleaseStep = ReleaseStep(releaseStepCommand("publishLocal"))
 
-lazy val commonSettings = Seq(
-  name := "alphabet-soup",
-  scalaVersion := "2.12.8",
-  organization := "io.typechecked",
-  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
+val paradiseVersion = "2.1.0"
+
+lazy val publishingSettings = Seq (
 
   credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credential"),
 
@@ -54,6 +52,13 @@ lazy val commonSettings = Seq(
   // sbt-release plugin settings
   releaseUseGlobalVersion := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+
+)
+
+lazy val commonSettings = Seq(
+  scalaVersion := "2.12.8",
+  organization := "io.typechecked",
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
 
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
@@ -99,13 +104,24 @@ lazy val commonSettings = Seq(
   )
 )
 
-// TODO: Put back in root directory?
-val shared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("shared")).settings(commonSettings)
+val macroShared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("macros")).settings(
+  name := "macros",
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
+  commonSettings)
 
-lazy val sharedJVM = shared.jvm
-lazy val sharedJS = shared.js
+// TODO: Put back in root directory?
+val shared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("shared")).settings(
+  name := "alphabet-soup",
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
+  commonSettings ++ publishingSettings)
+
+lazy val macroJVM = macroShared.jvm
+lazy val sharedJVM = shared.jvm.dependsOn(macroJVM)
+lazy val macroJS = macroShared.js
+lazy val sharedJS = shared.js.dependsOn(macroJS)
 
 lazy val alphabetSoup = project.in(file(".")).aggregate(sharedJVM, sharedJS).settings(
   commonSettings,
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   publishArtifact := false
 )
