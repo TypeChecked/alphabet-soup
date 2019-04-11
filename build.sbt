@@ -8,8 +8,6 @@ resolvers ++= Seq (
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-val publishLocalReleaseStep = ReleaseStep(releaseStepCommand("publishLocal"))
-
 val paradiseVersion = "2.1.0"
 
 lazy val publishingSettings = Seq (
@@ -105,21 +103,29 @@ lazy val commonSettings = Seq(
   )
 )
 
-val macroShared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("macros")).settings(
-  name := "macros",
-  commonSettings)
+val macros = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup-macros")).settings(
+  name := "alphabet-soup-macros",
+  commonSettings
+)
 
 // TODO: Put back in root directory?
-val shared = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("shared")).settings(
+val alphabetSoup = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup")).settings(
   name := "alphabet-soup",
-  commonSettings ++ publishingSettings)
+  commonSettings ++ publishingSettings
+)
 
-lazy val macroJVM = macroShared.jvm
-lazy val sharedJVM = shared.jvm.dependsOn(macroJVM)
-lazy val macroJS = macroShared.js
-lazy val sharedJS = shared.js.dependsOn(macroJS)
+lazy val macroJVM = macros.jvm
+lazy val alphabetSoupJVM = alphabetSoup.jvm.dependsOn(macroJVM)
 
-lazy val alphabetSoup = project.in(file(".")).aggregate( macroJVM, macroJS, sharedJVM, sharedJS).settings(
+lazy val macroJS = macros.js
+lazy val alphabetSoupJS = alphabetSoup.js.dependsOn(macroJS)
+
+lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS).settings(
+  name := "alphabet-soup-parent",
   commonSettings,
-  publishArtifact := false
+  PgpKeys.publishSigned := {},
+  PgpKeys.publishLocalSigned := {},
+  publishLocal := {},
+  publishArtifact in Compile := false,
+  publish := {}
 )
