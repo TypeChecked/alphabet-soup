@@ -21,7 +21,7 @@ object AtomicMacro {
     def extractClassName(classDecl: ClassDef, mods: c.universe.Modifiers, name: c.universe.TypeName) = (classDecl, mods.hasFlag(TRAIT)) match {
       case (q"$_ class $className(..$_) extends ..$_ { ..$_ }", _) => className
       case (_, true) => name
-      case _ => c.abort(c.enclosingPosition, "@Atomic annotation is only supported on case classes, classes and (pls god) traits")
+      case _ => c.abort(c.enclosingPosition, "@Atomic annotation is only supported on case classes, classes and traits")
     } 
 
     def modifiedCompanion(maybeCompDecl: Option[ModuleDef], atomImplicit: ValDef, className: TypeName) = {
@@ -50,7 +50,7 @@ object AtomicMacro {
     annottees.map(_.tree).toList match {
         case (classDecl@ClassDef(mods, name, _, _)) :: Nil => modifiedDecl(classDecl, mods, name)
         case (classDecl@ClassDef(mods, name, _, _)) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, mods, name, Some(compDecl))
-        case _ => c.abort(c.enclosingPosition, "Invalid Annotee")
+        case _ => c.abort(c.enclosingPosition, "Invalid: Can not annotate structure with @Atomic")
       }
   }
 }
