@@ -50,6 +50,20 @@ implicit val atomT: Atom[T] = Atom[T]
 
 Just make sure it's in scope whenever you create a `Mixer`.
 
+Alternatively an `Atom` can be created by using the macro annotation `@Atomic`.
+
+In order to use the macro you must add the following compiler plugin to your `build.sbt`
+```
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+```
+
+Then creating an `Atom` is simple:
+```scala
+@Atomic case class Foo(a: Int)
+@Atomic trait Foo
+@Atomic class Foo
+```
+
 ### Molecules
 
 A `Molecule` is something beyond a boundary that we can't handle at compile time - for example a `List`. The information
