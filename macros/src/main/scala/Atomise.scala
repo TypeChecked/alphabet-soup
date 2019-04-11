@@ -2,27 +2,27 @@ package macros
 
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
+import scala.reflect.api.Trees
 import scala.reflect.macros.blackbox._
 
 class Atomic extends StaticAnnotation {
-  def macroTransform(annottees: Any*) = macro AtomicMacro.impl
+  def macroTransform(annottees: Any*): Any = macro AtomicMacro.impl
 }
 
 object AtomicMacro {
+
   def impl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
+    import Flag._
 
     def mkAtomImplicit(className: TypeName) = {
-        q"""implicit val ${TermName(className.toTermName.toString + "atom")}: Atom[$className] = Atom[$className]"""
+        q"""implicit val ${TermName(className.toTermName.toString + "atom")}: io.typechecked.alphabetsoup.Atom[$className] = io.typechecked.alphabetsoup.Atom[$className]"""
     }
 
-    def extractClassName(classDecl: ClassDef) = {
-      try {
-        val q"case class $className(..$_) extends ..$_ { ..$_ }" = classDecl
-        className
-      } catch {
-        case _: MatchError => c.abort(c.enclosingPosition, "@Atmic annotation is only supported on case class")
-      }
+    def extractClassName(classDecl: ClassDef, mods: c.universe.Modifiers, name: c.universe.TypeName) = (classDecl, mods.hasFlag(TRAIT)) match {
+      case (q"$_ class $className(..$_) extends ..$_ { ..$_ }", _) => className
+      case (_, true) => name
+      case _ => c.abort(c.enclosingPosition, "@Atomic annotation is only supported on case classes, classes and (pls god) traits")
     } 
 
     def modifiedCompanion(maybeCompDecl: Option[ModuleDef], atomImplicit: ValDef, className: TypeName) = {
@@ -37,8 +37,8 @@ object AtomicMacro {
       }
     }
 
-    def modifiedDecl(classDecl: ClassDef, maybeCompDecl: Option[ModuleDef] = None) = {
-      val className = extractClassName(classDecl)
+    def modifiedDecl(classDecl: ClassDef, mods: c.universe.Modifiers, name: c.universe.TypeName, maybeCompDecl: Option[ModuleDef] = None) = {
+      val className = extractClassName(classDecl, mods, name)
       val atomImplicit = mkAtomImplicit(className)
       val companion = modifiedCompanion(maybeCompDecl, atomImplicit, className)
 
@@ -49,8 +49,8 @@ object AtomicMacro {
     }
 
     annottees.map(_.tree).toList match {
-        case (classDecl: ClassDef) :: Nil => modifiedDecl(classDecl)
-        case (classDecl: ClassDef) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, Some(compDecl))
+        case (classDecl@ClassDef(mods, name, _, _)) :: Nil => modifiedDecl(classDecl, mods, name)
+        case (classDecl@ClassDef(mods, name, _, _)) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, mods, name, Some(compDecl))
         case _ => c.abort(c.enclosingPosition, "Invalid Annotee")
       }
   }

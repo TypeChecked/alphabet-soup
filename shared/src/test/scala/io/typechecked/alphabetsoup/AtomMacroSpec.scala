@@ -66,6 +66,8 @@ class AtomMacroSpec extends FlatSpec with Matchers {
 		foo.baz shouldBe 42
 		foo.giveMeBam shouldBe false
 
+		"Foo.Fooatom" should compile
+
 	}
 	it should "blow up with ambiguous implicits if an Atom is already defined" in {
 		@Atomic case class Foo()
@@ -74,15 +76,68 @@ class AtomMacroSpec extends FlatSpec with Matchers {
 			implicit val atom: Atom[Foo] = Atom[Foo]
 		}
 
-		illTyped{"implicitly[Atom[Foo]]"}
+		illTyped("implicitly[Atom[Foo]]",".*ambiguous implicit values.*")
 	}
 	it should "blow up if something is defined inside companion object with same name as generated one" in {
-		illTyped{"""
+		illTyped("""
 			@Atomic case class Foo()
 
 			object Foo {
 				val Fooatom = "I am the real Fooatom!!!"
 			}
-		"""}
+		""",".*Fooatom is already defined as value Fooatom.*")
+	}
+	it should "create an implicit Atom for a Class" in {
+		@Atomic class Foo()
+
+		implicitly[Atom[Foo]]
+	}
+	it should "create an implicit Atom for a protected sealed abstract protected Class" in {
+
+		implicitly[Atom[PrivateFoo]]
+	}
+	it should "create an implicit Atom for a Trait" in {
+		@Atomic trait Foo
+
+		implicitly[Atom[Foo]]
+	}
+	it should "create an implicit Atom for a Trait with existing functions" in {
+		@Atomic trait Foo {
+			def bar: String = "bar"
+		}
+
+		implicitly[Atom[Foo]]
+
+		val foo = new Foo {}	
+		foo.bar shouldBe "bar"
+	}
+	it should "create an implicit Atom for nested classes" in {
+		class A {
+			@Atomic class B
+			object B 
+			implicitly[Atom[B]] 
+		}
+	}
+	it should "create an implicit Atom when companion object is far away" in {
+		@Atomic class A
+
+		trait B
+		@Atomic trait C
+
+		object A
+
+		implicitly[Atom[A]]
+		implicitly[Atom[C]]
+
+	}
+	it should "" in {
+		def foo = {
+			@Atomic class A
+
+			implicitly[Atom[A]]
+		}
 	}
 }
+
+@Atomic protected sealed abstract class PrivateFoo(implicit impl: DummyImplicit)
+
