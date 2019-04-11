@@ -1,8 +1,7 @@
-package macros
+package io.typechecked.macros
 
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
-import scala.reflect.api.Trees
 import scala.reflect.macros.blackbox._
 
 class Atomic extends StaticAnnotation {

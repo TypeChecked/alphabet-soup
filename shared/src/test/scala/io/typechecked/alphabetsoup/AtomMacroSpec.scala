@@ -1,5 +1,5 @@
 package io.typechecked.alphabetsoup
-import macros._
+import io.typechecked.macros.Atomic
 import org.scalatest._
 import shapeless.test.illTyped
 
