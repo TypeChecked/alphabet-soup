@@ -125,14 +125,13 @@ Here's a more complicated example to show what it can do.
 
 ```scala
 // You should follow the philosophy of every value is a type!
-// Pretend the following have Atom instances defined in your project:
-case class FirstName(value: String)
-case class LastName(value: String)
-case class Address1(value: String)
-case class City(value: String)
-case class Postcode(value: String)
-case class Title(value: String)
-case class Gender(value: String)
+@Atomic case class FirstName(value: String)
+@Atomic case class LastName(value: String)
+@Atomic case class Address1(value: String)
+@Atomic case class City(value: String)
+@Atomic case class Postcode(value: String)
+@Atomic case class Title(value: String)
+@Atomic case class Gender(value: String)
 
 // This is our data tree
 case class Address(a1: Address1, c: City, p: Postcode)
