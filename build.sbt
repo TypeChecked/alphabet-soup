@@ -53,6 +53,14 @@ lazy val publishingSettings = Seq (
 
 )
 
+lazy val noPublishSettings = Seq(
+  PgpKeys.publishSigned := {},
+  PgpKeys.publishLocalSigned := {},
+  publishLocal := {},
+  publishArtifact in Compile := false,
+  publish := {}
+)
+
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.8",
   organization := "io.typechecked",
@@ -105,7 +113,7 @@ lazy val commonSettings = Seq(
 
 val macros = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup-macros")).settings(
   name := "alphabet-soup-macros",
-  commonSettings
+  commonSettings ++ noPublishSettings
 )
 
 // TODO: Put back in root directory?
@@ -122,10 +130,5 @@ lazy val alphabetSoupJS = alphabetSoup.js.dependsOn(macroJS)
 
 lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS).settings(
   name := "alphabet-soup-parent",
-  commonSettings,
-  PgpKeys.publishSigned := {},
-  PgpKeys.publishLocalSigned := {},
-  publishLocal := {},
-  publishArtifact in Compile := false,
-  publish := {}
+  commonSettings ++ noPublishSettings
 )
