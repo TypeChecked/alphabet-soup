@@ -96,7 +96,7 @@ class AtomMacroSpec extends FlatSpec with Matchers {
   }
   it should "create an implicit Atom for a protected sealed abstract protected Class" in {
 
-    implicitly[Atom[PrivateFoo]]
+    implicitly[Atom[ProtectedFoo]]
   }
   it should "create an implicit Atom for a Trait" in {
     @Atomic trait Foo
@@ -144,10 +144,16 @@ class AtomMacroSpec extends FlatSpec with Matchers {
 
     implicitly[Atom[Foo]]
   }
+  it should "create an implicit Atom for private package classes" in {
+    implicitly[Atom[PrivateFoo]]
+  }
   it should "not compile for objects" in {
+
    illTyped("@Atomic object Foo",".*Invalid: Can not annotate structure with @Atomic.*")
+
   }
 }
 
-@Atomic protected sealed abstract class PrivateFoo(implicit impl: DummyImplicit)
+@Atomic protected sealed abstract class ProtectedFoo(implicit impl: DummyImplicit)
 
+@Atomic private[alphabetsoup] class PrivateFoo
