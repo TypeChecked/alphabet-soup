@@ -105,7 +105,7 @@ lazy val commonSettings = Seq(
 
 val macros = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup-macros")).settings(
   name := "alphabet-soup-macros",
-  commonSettings
+  commonSettings ++ publishingSettings
 )
 
 // TODO: Put back in root directory?
