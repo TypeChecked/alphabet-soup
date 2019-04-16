@@ -139,6 +139,14 @@ class AtomMacroSpec extends FlatSpec with Matchers {
       implicitly[Atom[A]]
     }
   }
+  it should "create an implicit Atom for a class with a private constructor" in {
+    @Atomic class Foo private(bar:Int, val baz:String)
+
+    implicitly[Atom[Foo]]
+  }
+  it should "not compile for objects" in {
+   illTyped("@Atomic object Foo",".*Invalid: Can not annotate structure with @Atomic.*")
+  }
 }
 
 @Atomic protected sealed abstract class PrivateFoo(implicit impl: DummyImplicit)

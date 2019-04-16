@@ -20,12 +20,6 @@ object AtomicMacro {
         q"""implicit val ${TermName(className.toTermName.toString + "atom")}: io.typechecked.alphabetsoup.Atom[$className] = io.typechecked.alphabetsoup.Atom[$className]"""
     }
 
-    def extractClassName(classDecl: ClassDef, mods: c.universe.Modifiers, name: c.universe.TypeName) = (classDecl, mods.hasFlag(TRAIT)) match {
-      case (q"$_ class $className(..$_) extends ..$_ { ..$_ }", _) => className
-      case (_, true) => name
-      case _ => c.abort(c.enclosingPosition, "@Atomic annotation is only supported on case classes, classes and traits")
-    } 
-
     def modifiedCompanion(maybeCompDecl: Option[ModuleDef], atomImplicit: ValDef, className: TypeName) = {
       maybeCompDecl.fold(q"object ${className.toTermName} { $atomImplicit }"){ compDecl =>
         val q"object $obj extends ..$bases { ..$body }" = compDecl
@@ -38,8 +32,8 @@ object AtomicMacro {
       }
     }
 
-    def modifiedDecl(classDecl: ClassDef, mods: c.universe.Modifiers, name: c.universe.TypeName, maybeCompDecl: Option[ModuleDef] = None) = {
-      val className = extractClassName(classDecl, mods, name)
+    def modifiedDecl(classDecl: ClassDef, name: c.universe.TypeName, maybeCompDecl: Option[ModuleDef] = None) = {
+      val className = name
       val atomImplicit = mkAtomImplicit(className)
       val companion = modifiedCompanion(maybeCompDecl, atomImplicit, className)
 
@@ -50,8 +44,8 @@ object AtomicMacro {
     }
 
     annottees.map(_.tree).toList match {
-        case (classDecl@ClassDef(mods, name, _, _)) :: Nil => modifiedDecl(classDecl, mods, name)
-        case (classDecl@ClassDef(mods, name, _, _)) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, mods, name, Some(compDecl))
+        case (classDecl@ClassDef(_, name, _, _)) :: Nil => modifiedDecl(classDecl, name)
+        case (classDecl@ClassDef(_, name, _, _)) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, name, Some(compDecl))
         case _ => c.abort(c.enclosingPosition, "Invalid: Can not annotate structure with @Atomic")
       }
   }
