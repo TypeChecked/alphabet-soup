@@ -10,7 +10,7 @@ import shapeless.Lazy
 // This is the version code should use
 trait Mixer[A, B] {
   def mix(a: A): B
-  def replace(b: B, a: A): A
+  def inject(b: B, a: A): A
 }
 
 object Mixer {
@@ -39,7 +39,7 @@ object Mixer {
             m.mix(a :: defaults :: HNil)
           }
 
-          def replace(b: To, a: From): From = r.mix(b -> a)
+          def inject(b: To, a: From): From = r.mix(b -> a)
         }
 
     }
@@ -49,7 +49,7 @@ object Mixer {
   private def fromMixerImpl[A, B](m: MixerImpl[A, B], r: MixerImpl[(B, A), A]): Mixer[A, B] = new Mixer[A, B] {
     def mix(a: A): B = m.mix(a)
 
-    def replace(b: B, a: A): A = r.mix(b -> a)
+    def inject(b: B, a: A): A = r.mix(b -> a)
   }
 }
 
