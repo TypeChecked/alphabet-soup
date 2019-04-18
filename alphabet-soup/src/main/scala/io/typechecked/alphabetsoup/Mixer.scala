@@ -10,13 +10,14 @@ import shapeless.Lazy
 // This is the version code should use
 trait Mixer[A, B] {
   def mix(a: A): B
+  def replace(b: B, a: A): A
 }
 
 object Mixer {
 
-  def apply[A, B](implicit m: MixerImpl[A, B]): Mixer[A, B] = fromMixerImpl(m)
+  def apply[A, B](implicit m: MixerImpl[A, B], r: MixerImpl[(B, A), A]): Mixer[A, B] = fromMixerImpl(m, r)
 
-  implicit def materialise[A, B](implicit m: MixerImpl[A, B]): Mixer[A, B] = fromMixerImpl(m)
+  implicit def materialise[A, B](implicit m: MixerImpl[A, B], r: MixerImpl[(B, A), A]): Mixer[A, B] = fromMixerImpl(m, r)
 
   def from[From]: MixerBuilder[From] = new MixerBuilder[From] {}
 
@@ -32,19 +33,23 @@ object Mixer {
       def mix(from: From)(implicit m: MixerImpl[From :: Defaults :: HNil, To]): To =
         m.mix(from :: defaults :: HNil)
 
-      def build(implicit m: MixerImpl[From :: Defaults :: HNil, To]): Mixer[From, To] =
+      def build(implicit m: MixerImpl[From :: Defaults :: HNil, To], r: MixerImpl[(To, From), From]): Mixer[From, To] =
         new Mixer[From, To] {
           def mix(a: From): To = {
             m.mix(a :: defaults :: HNil)
           }
+
+          def replace(b: To, a: From): From = r.mix(b -> a)
         }
 
     }
 
   }
 
-  private def fromMixerImpl[A, B](m: MixerImpl[A, B]): Mixer[A, B] = new Mixer[A, B] {
+  private def fromMixerImpl[A, B](m: MixerImpl[A, B], r: MixerImpl[(B, A), A]): Mixer[A, B] = new Mixer[A, B] {
     def mix(a: A): B = m.mix(a)
+
+    def replace(b: B, a: A): A = r.mix(b -> a)
   }
 }
 

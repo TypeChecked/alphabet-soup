@@ -271,6 +271,8 @@ class MixerSpec extends FlatSpec with Matchers {
     // behaviour with our own
     implicit val mixer: Mixer[A, (Boolean, Int)] = new Mixer[A, (Boolean, Int)] {
       def mix(a: A): (Boolean, Int) = a.b -> (a.i + 100)
+
+      def replace(b: (Boolean, Int), a: A): A = a
     }
 
     val source = Source(List(A(1, true), A(2, false), A(3, true)))
