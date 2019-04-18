@@ -15,6 +15,7 @@ trait Mixer[A, B] {
 
 object Mixer {
 
+  // TODO: This second implicit's functionality should be built up inside, rather than created here
   def apply[A, B](implicit m: MixerImpl[A, B], r: MixerImpl[(B, A), A]): Mixer[A, B] = fromMixerImpl(m, r)
 
   implicit def materialise[A, B](implicit m: MixerImpl[A, B], r: MixerImpl[(B, A), A]): Mixer[A, B] = fromMixerImpl(m, r)
