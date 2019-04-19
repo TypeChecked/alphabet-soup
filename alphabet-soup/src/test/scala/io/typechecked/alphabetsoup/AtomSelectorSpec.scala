@@ -10,8 +10,7 @@ class AtomSelectorSpec extends FlatSpec with Matchers {
   case class Pair(i: Int, s: String)
   case class T(p: Pair, b: Boolean)
 
-  "AtomSelector" should "not work on atoms" in {
-
+  "AtomSelector" should "not work on atomic structures" in {
     illTyped("AtomSelector[Int, Int]")
   }
 

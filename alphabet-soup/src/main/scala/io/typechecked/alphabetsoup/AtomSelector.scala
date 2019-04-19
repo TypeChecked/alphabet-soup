@@ -13,10 +13,10 @@ object AtomSelector {
   def apply[L, U](implicit atomSelector: AtomSelector[L, U]): AtomSelector[L, U] = atomSelector
 
   implicit def atomiseThenDelegate[L, LOut, U](
-    implicit dg: Atomiser.Aux[L, LOut],
+    implicit atomiser: Atomiser.Aux[L, LOut],
     s: SelectOrDefault[LOut, U]
   ): AtomSelector[L, U] = new AtomSelector[L, U] {
-    def apply(t: L): U = s(dg.to(t))
+    def apply(t: L): U = s(atomiser.to(t))
   }
 
 }

@@ -16,3 +16,8 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+
+*.sublime-workspace
+*.sublime-project
+
+.DS_Store
