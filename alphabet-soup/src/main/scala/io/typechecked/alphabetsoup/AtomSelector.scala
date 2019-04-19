@@ -6,6 +6,7 @@ import shapeless.{::, HList}
 // TODO rename, now also handles molecules
 trait AtomSelector[L, U] {
   def apply(l: L): U
+  def replace(u: U, l: L): L
 }
 
 object AtomSelector {
@@ -17,6 +18,7 @@ object AtomSelector {
     s: SelectOrDefault[LOut, U]
   ): AtomSelector[L, U] = new AtomSelector[L, U] {
     def apply(t: L): U = s(atomiser.to(t))
+    def replace(u: U, l: L): L = atomiser.from(s.replace(u, atomiser.to(l)))
   }
 
 }

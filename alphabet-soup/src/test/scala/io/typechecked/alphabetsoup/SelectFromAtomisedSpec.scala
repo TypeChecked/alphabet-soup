@@ -56,9 +56,25 @@ class SelectFromAtomisedSpec extends FlatSpec with Matchers {
     SelectFromAtomised[L, U].replace(List("thread"), l) shouldBe 17 :: List("thread") :: HNil
   }
 
-  it should "NOT fuzzily replace a molecule from an atomised structure" in {
+  it should "NOT fuzzily replace a molecule from an atomised structure if the internal types cannot be mixed to one another" in {
 
     // Fuzziness does NOT work with replacing molecules
+
+    // A and B are not isomorphic; we have Mixer[A, B] but not Mixer[B, A]
+    case class A(str: String, int: Int)
+    case class B(str: String)
+
+    type L = Int :: List[A] :: HNil
+    type U = List[B]
+
+    val l = 17 :: List(A("twine", 0), A("yarn", 2)) :: HNil
+
+    SelectFromAtomised[L, U].replace(List(B("thread")), l) shouldBe l
+  }
+
+  it should "fuzzily replace a molecule from an atomised structure if the internal types are isomorphic" in {
+
+    // Fuzziness DOES work with replacing molecules if the internal types are isomorphic
 
     case class A(str: String)
     case class B(str: String)
@@ -68,7 +84,7 @@ class SelectFromAtomisedSpec extends FlatSpec with Matchers {
 
     val l = 17 :: List(A("twine"), A("yarn")) :: HNil
 
-    SelectFromAtomised[L, U].replace(List(B("thread")), l) shouldBe l
+    SelectFromAtomised[L, U].replace(List(B("thread")), l) shouldBe 17 :: List(A("thread")) :: HNil
   }
 
   it should "not compile for an atomic value from a non-atomised structure" in {
