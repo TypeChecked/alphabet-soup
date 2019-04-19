@@ -96,4 +96,20 @@ class SelectFromAtomisedSpec extends FlatSpec with Matchers {
     illTyped("SelectFromAtomised[L, U]", ".*could not find implicit value.*SelectFromAtomised.*")
   }
 
+  it should "not compile if the type is not present" in {
+    type L = Int :: String :: HNil
+    type U = Boolean
+
+    illTyped("SelectFromAtomised[L, U]", ".*could not find implicit value.*SelectFromAtomised.*")
+  }
+
+  it should "not compile if the type is not present even if there is a default present" in {
+    type L = Int :: String :: HNil
+    type U = Boolean
+
+    implicit val default: Atom.DefaultAtom[U] = Atom.DefaultAtom[U](false)
+
+    illTyped("SelectFromAtomised[L, U]", ".*could not find implicit value.*SelectFromAtomised.*")
+  }
+
 }
