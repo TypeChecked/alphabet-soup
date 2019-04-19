@@ -53,6 +53,31 @@ class MixerReplaceSpec extends FlatSpec with Matchers {
 
     Mixer[Source, Target].inject(target, source) shouldBe Source(7, "DANGER", List(a1, a2, a3), List(b1, b2))
   }
+
+  it should "not work for molecules where the smaller type has lost information" in {
+    case class A(i: Int, b: Boolean)
+    case class B(i: String)
+    case class Source(i: Int, s: String, as: List[A], bs: List[B])
+
+    case class BS(bs: List[B])
+    case class Target(i: Int, bs: BS, as: List[(Boolean)])
+
+    val a1 = A(1, true)
+    val a2 = A(2, false)
+    val a3 = A(3, true)
+
+    val b1 = B("ten")
+    val b2 = B("twenty")
+
+    val source = Source(17, "DANGER", List(A(0, false), A(0, true), A(0, false)), List(B("NOOO"), B("NOT MEEEEE")))
+    val target = Target(7, BS(List(b1, b2)), List(true, false, true))
+
+    // Note the internal molecule: Just uses source's value because the target doesn't have a molecule which can
+    // project onto it
+    // We have a Mixer[A, Boolean] but not the other way
+    Mixer[Source, Target].inject(target, source) shouldBe Source(7, "DANGER", source.as, List(b1, b2))
+  }
+
   it should "work when values are the same" in {
     case class Source(a: Int)
     case class Target(b: Int)
