@@ -44,7 +44,7 @@ trait SelectFromAtomised[L, U] {
 }
 
 // TODO: Atom/Molecule paths could be unified or split more sensibly
-object SelectFromAtomised {
+object SelectFromAtomised extends LowPrioritySelectFromAtomised {
 
   def apply[L, U](implicit as: SelectFromAtomised[L, U]): SelectFromAtomised[L, U] = as
 
@@ -68,14 +68,17 @@ object SelectFromAtomised {
       def replace(u: U, l: H :: T): H :: T = st.value.replace(u, l.head) :: l.tail
     }
 
-  implicit def fuzzyHeadSelectMolecule[M[_], A, T <: HList, B](
+  // case where A & B are isomorphic
+  implicit def fuzzyHeadSelectMoleculeABIso[M[_], A, T <: HList, B](
     implicit molecule: Molecule[M, B],
     ev: A =:!= B,
-    mixer: Lazy[Mixer[A, B]]
+    // TODO: Isomorphism typeclass
+    mixer: Lazy[Mixer[A, B]],
+    mixer2: Lazy[Mixer[B, A]]
   ): SelectFromAtomised[M[A] :: T, M[B]] =
     new SelectFromAtomised[M[A] :: T, M[B]] {
       def apply(t: M[A] :: T): M[B] = molecule.functor.map(t.head)(mixer.value.mix)
-      def replace(u: M[B], l: M[A] :: T): M[A] :: T = l
+      def replace(u: M[B], l: M[A] :: T): M[A] :: T = molecule.functor.map(u)(mixer2.value.mix) :: l.tail
     }
 
   implicit def preciseHeadSelectMolecule[M[_], A, T <: HList](
@@ -102,6 +105,20 @@ object SelectFromAtomised {
     new SelectFromAtomised[H :: T, M[U]] {
       def apply(l: H :: T): M[U] = st.value(l.head)
       def replace(u: M[U], l: H :: T): H :: T = st.value.replace(u, l.head) :: l.tail
+    }
+
+}
+
+trait LowPrioritySelectFromAtomised {
+
+  implicit def fuzzyHeadSelectMolecule[M[_], A, T <: HList, B](
+    implicit molecule: Molecule[M, B],
+    ev: A =:!= B,
+    mixer: Lazy[Mixer[A, B]]
+  ): SelectFromAtomised[M[A] :: T, M[B]] =
+    new SelectFromAtomised[M[A] :: T, M[B]] {
+      def apply(t: M[A] :: T): M[B] = molecule.functor.map(t.head)(mixer.value.mix)
+      def replace(u: M[B], l: M[A] :: T): M[A] :: T = l
     }
 
 }
