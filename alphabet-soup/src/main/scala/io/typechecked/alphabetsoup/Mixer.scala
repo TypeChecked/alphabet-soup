@@ -11,6 +11,7 @@ import shapeless.Lazy
 trait Mixer[A, B] {
   def mix(a: A): B
   def inject(b: B, a: A): A
+  def modify(f: B => B): A => A = a => inject(f(mix(a)), a)
 }
 
 object Mixer {
