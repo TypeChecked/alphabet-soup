@@ -2,8 +2,6 @@ package io.typechecked
 package alphabetsoup
 package macros
 
-import cats.data.NonEmptyList
-
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox._
