@@ -152,6 +152,35 @@ class AtomMacroSpec extends FlatSpec with Matchers {
    illTyped("@Atomic object Foo",".*Invalid: Can not annotate structure with @Atomic.*")
 
   }
+  it should "create an implicit Atom for a class with a type parameter" in {
+    @Atomic class Foo[A]
+    implicitly[Atom[Foo[String]]]
+  }
+  it should "create an implicit Atom for a class with a higher-kinded type parameter" in {
+    @Atomic class Foo[A[_]]
+    implicitly[Atom[Foo[Option]]]
+  }
+  it should "create an implicit Atom for a class with many type parameters" in {
+    @Atomic class Foo[A[_], B, C]
+    implicitly[Atom[Foo[Option, String, (Boolean, List[String])]]]
+  }
+  it should "create an implicit Atom for a class with a type parameter with a type bound" in {
+    trait S
+    class T extends S
+    class U extends T
+    @Atomic class Foo[A <: T]
+    implicitly[Atom[Foo[U]]]
+    assertDoesNotCompile("implicitly[Atom[Foo[S]]]")
+
+    @Atomic class Bar[B >: T]
+    implicitly[Atom[Bar[S]]]
+    assertDoesNotCompile("implicitly[Atom[Bar[U]]]")
+
+    @Atomic class Faz[A >: U <: S]
+    implicitly[Atom[Faz[T]]]
+    assertDoesNotCompile("implicitly[Atom[Faz[String]]]")
+  }
+
 }
 
 @Atomic protected sealed abstract class ProtectedFoo(implicit impl: DummyImplicit)
