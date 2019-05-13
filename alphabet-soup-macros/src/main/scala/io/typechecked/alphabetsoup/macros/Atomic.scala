@@ -2,6 +2,8 @@ package io.typechecked
 package alphabetsoup
 package macros
 
+import cats.data.NonEmptyList
+
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox._
@@ -19,7 +21,12 @@ object AtomicMacro {
         q"""implicit val ${TermName(className.toTermName.toString + "atom")}: io.typechecked.alphabetsoup.Atom[$className] = io.typechecked.alphabetsoup.Atom[$className]"""
     }
 
-    def modifiedCompanion(maybeCompDecl: Option[ModuleDef], atomImplicit: ValDef, className: TypeName) = {
+    def mkAtomImplicitParams(className: TypeName, tParams: List[TypeDef]) = {
+      val params = tParams.map(_.name)
+      q"""implicit def ${TermName(className.toTermName.toString + "atom")}[..$tParams]:io.typechecked.alphabetsoup.Atom[$className[..$params]] = io.typechecked.alphabetsoup.Atom[$className[..$params]]"""
+    }
+
+    def modifiedCompanion(maybeCompDecl: Option[ModuleDef], atomImplicit: Tree, className: TypeName) = {
       maybeCompDecl.fold(q"object ${className.toTermName} { $atomImplicit }"){ compDecl =>
         val q"object $obj extends ..$bases { ..$body }" = compDecl
         q"""
@@ -31,10 +38,9 @@ object AtomicMacro {
       }
     }
 
-    def modifiedDecl(classDecl: ClassDef, name: c.universe.TypeName, maybeCompDecl: Option[ModuleDef] = None) = {
-      val className = name
-      val atomImplicit = mkAtomImplicit(className)
-      val companion = modifiedCompanion(maybeCompDecl, atomImplicit, className)
+    def modifiedDecl(classDecl: ClassDef, name: TypeName, tParams: List[TypeDef], maybeCompDecl: Option[ModuleDef] = None) = {
+      val atomImplicit = if (tParams.isEmpty) mkAtomImplicit(name) else mkAtomImplicitParams(name, tParams)
+      val companion = modifiedCompanion(maybeCompDecl, atomImplicit, name)
 
       c.Expr(q"""
         $classDecl
@@ -43,8 +49,8 @@ object AtomicMacro {
     }
 
     annottees.map(_.tree).toList match {
-        case (classDecl@ClassDef(_, name, _, _)) :: Nil => modifiedDecl(classDecl, name)
-        case (classDecl@ClassDef(_, name, _, _)) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, name, Some(compDecl))
+        case (classDecl@ClassDef(_, name, tParams, _)) :: Nil => modifiedDecl(classDecl, name, tParams)
+        case (classDecl@ClassDef(_, name, tParams, _)) :: (compDecl: ModuleDef) :: Nil => modifiedDecl(classDecl, name, tParams, Some(compDecl))
         case _ => c.abort(c.enclosingPosition, "Invalid: Can not annotate structure with @Atomic")
       }
   }
