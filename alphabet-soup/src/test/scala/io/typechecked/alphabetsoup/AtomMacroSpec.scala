@@ -170,15 +170,24 @@ class AtomMacroSpec extends FlatSpec with Matchers {
     class U extends T
     @Atomic class Foo[A <: T]
     implicitly[Atom[Foo[U]]]
-    assertDoesNotCompile("implicitly[Atom[Foo[S]]]")
+    illTyped(
+      "implicitly[Atom[Foo[S]]]",
+      "could not find implicit value for parameter.*"
+    )
 
     @Atomic class Bar[B >: T]
     implicitly[Atom[Bar[S]]]
-    assertDoesNotCompile("implicitly[Atom[Bar[U]]]")
+    illTyped(
+      "implicitly[Atom[Bar[U]]]",
+      "could not find implicit value for parameter.*"
+    )
 
     @Atomic class Faz[A >: U <: S]
     implicitly[Atom[Faz[T]]]
-    assertDoesNotCompile("implicitly[Atom[Faz[String]]]")
+    illTyped(
+      "implicitly[Atom[Faz[String]]]",
+      "could not find implicit value for parameter.*"
+    )
   }
 
 }
