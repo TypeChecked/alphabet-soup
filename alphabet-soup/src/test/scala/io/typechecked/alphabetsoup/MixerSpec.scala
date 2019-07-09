@@ -51,6 +51,15 @@ class MixerSpec extends FlatSpec with Matchers {
       "implicitly[Mixer[(A, B), B]]" should compile
     }
 
+    class AA
+    class BB
+    implicit val aaAtom: Atom[AA] = Atom[AA]
+    implicit val bbAtom: Atom[BB] = Atom[BB]
+
+    pendingUntilFixed{
+      "implicitly[Mixer[(AA, BB), BB]]" should compile
+    }
+
     @Atomic trait C
     @Atomic trait D
 
