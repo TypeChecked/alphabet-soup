@@ -42,17 +42,22 @@ class MixerSpec extends FlatSpec with Matchers {
     @Atomic class A
     @Atomic class B
 
-    pendingUntilFixed(illTyped("""Mixer[(A, B), B]"""))
+    pendingUntilFixed{
+      "implicitly[Mixer[(A, B), B]]" should compile
+    }
 
     @Atomic trait C
     @Atomic trait D
 
     implicitly[Mixer[(C, D), D]]
+    implicitly[Mixer[(C, D), C]]
 
     @Atomic case class E()
     @Atomic case class F()
 
-    pendingUntilFixed(illTyped("""Mixer[(E, F), F]"""))
+    pendingUntilFixed{
+      "implicitly[Mixer[(E, F), F]]" should compile
+    }
   }
 
   it should "not work on mis-matched simple types" in {
