@@ -74,9 +74,13 @@ object MixerImpl {
     def inject(b: A, a: A): A = b
   }
 
-  implicit def atomiseThenImpl[A, AOut, B, BOut <: HList](
+  // Do not put bound `BOut <: HList`
+  // It does not behave as expected and inference causes issues downstream
+  // Reply on boutIsHList check instead
+  implicit def atomiseThenImpl[A, AOut, B, BOut](
     implicit ev: A =:!= B,
     atomiserB: Atomiser.Aux[B, BOut],
+    boutIsHList: BOut <:< HList,
     atomiserA: Atomiser.Aux[A, AOut],
     m: Lazy[MixerImplFromAtomised[AOut, BOut]]
   ): MixerImpl[A, B] = new MixerImpl[A, B] {
