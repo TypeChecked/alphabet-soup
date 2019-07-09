@@ -1,6 +1,7 @@
 package io.typechecked
 package alphabetsoup
 
+import io.typechecked.alphabetsoup.macros.Atomic
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import shapeless.::
@@ -34,6 +35,15 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[String :: HNil, String :: HNil].mix("hello" :: HNil) shouldBe "hello" :: HNil
     Mixer[Tuple1[String], Tuple1[String]].mix(Tuple1("hello")) shouldBe Tuple1("hello")
     Mixer[A1, A1].mix(A1(5, "hello")) shouldBe A1(5, "hello")
+  }
+
+  it should "be gud" in {
+
+    @Atomic class A
+    @Atomic class B
+
+    Mixer[(A, B), B]
+
   }
 
   it should "not work on mis-matched simple types" in {
