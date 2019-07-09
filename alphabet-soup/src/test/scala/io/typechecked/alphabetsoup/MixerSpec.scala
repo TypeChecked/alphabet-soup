@@ -37,10 +37,15 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[A1, A1].mix(A1(5, "hello")) shouldBe A1(5, "hello")
   }
 
+  it should "select smaller type from larger for primitives" in {
+    implicitly[Mixer[(String, Int), Int]]
+    implicitly[Mixer[(String, Int), String]]
+  }
+
   it should "select smaller type from larger for non-primitives" in {
 
     @Atomic class A
-    @Atomic class B
+    @Atomic class Bgit
 
     pendingUntilFixed{
       "implicitly[Mixer[(A, B), B]]" should compile
