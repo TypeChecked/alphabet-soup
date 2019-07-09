@@ -37,13 +37,22 @@ class MixerSpec extends FlatSpec with Matchers {
     Mixer[A1, A1].mix(A1(5, "hello")) shouldBe A1(5, "hello")
   }
 
-  it should "be gud" in {
+  it should "select smaller type from larger for non-primitives" in {
 
     @Atomic class A
     @Atomic class B
 
-    Mixer[(A, B), B]
+    pendingUntilFixed(illTyped("""Mixer[(A, B), B]"""))
 
+    @Atomic trait C
+    @Atomic trait D
+
+    implicitly[Mixer[(C, D), D]]
+
+    @Atomic case class E()
+    @Atomic case class F()
+
+    pendingUntilFixed(illTyped("""Mixer[(E, F), F]"""))
   }
 
   it should "not work on mis-matched simple types" in {
