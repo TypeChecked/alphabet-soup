@@ -45,7 +45,7 @@ class MixerSpec extends FlatSpec with Matchers {
   it should "select smaller type from larger for non-primitives" in {
 
     @Atomic class A
-    @Atomic class Bgit
+    @Atomic class B
 
     pendingUntilFixed{
       "implicitly[Mixer[(A, B), B]]" should compile
