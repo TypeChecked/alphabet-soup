@@ -275,4 +275,37 @@ class AtomiserSpec extends FlatSpec with Matchers {
     (gen.from(hlist): B) shouldBe value
   }
 
+  it should "atomise simple things correctly" in {
+
+    import macros.Atomic
+
+    @Atomic class A
+    @Atomic class B
+    val a = new A
+    val b = new B
+
+    Atomiser[A].to(a) shouldBe a
+    Atomiser[B].to(b) shouldBe b
+    Atomiser[(A, B)].to(a -> b) shouldBe a :: b :: HNil
+
+    @Atomic trait C
+    @Atomic trait D
+    val c = new C {}
+    val d = new D {}
+
+    Atomiser[C].to(c) shouldBe c
+    Atomiser[D].to(d) shouldBe d
+    Atomiser[(C, D)].to(c -> d) shouldBe c :: d :: HNil
+
+    @Atomic case class E()
+    @Atomic case class F()
+    val e = E()
+    val f = F()
+
+    Atomiser[E].to(e) shouldBe e
+    Atomiser[F].to(f) shouldBe f
+    Atomiser[(E, F)].to(e -> f) shouldBe e :: f :: HNil
+
+  }
+
 }
