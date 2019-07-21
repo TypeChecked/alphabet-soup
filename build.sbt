@@ -8,7 +8,9 @@ resolvers ++= Seq (
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-val paradiseVersion = "2.1.0"
+lazy val supportedScalaVersions = List("2.12.8", "2.13.0")
+
+lazy val catsVersion = SettingKey[String]("catsVersion")
 
 lazy val publishingSettings = Seq (
 
@@ -54,16 +56,14 @@ lazy val publishingSettings = Seq (
 )
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.13.0",
   organization := "io.typechecked",
-  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
-  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
 
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
-    "org.typelevel" %%% "cats-core" % "1.6.0",
-    "org.scalactic" %%% "scalactic" % "3.0.5",
-    "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
+    "org.typelevel" %%% "cats-core" % catsVersion.value,
+    "org.scalactic" %%% "scalactic" % "3.0.8",
+    "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
   ),
   scalacOptions := Seq(
     "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
@@ -76,9 +76,7 @@ lazy val commonSettings = Seq(
     "-language:implicitConversions",     // Allow definition of implicit functions called views
     "-unchecked",                        // Enable additional warnings where generated code depends on assumptions.
     "-Xcheckinit",                       // Wrap field accessors to throw an exception on uninitialized access.
-    "-Xfuture",                          // Turn on future language features.
     "-Xlint:adapted-args",               // Warn if an argument list is modified to match the receiver.
-    "-Xlint:by-name-right-associative",  // By-name parameter of right associative operator.
     "-Xlint:constant",                   // Evaluation of a constant arithmetic expression results in an error.
     "-Xlint:delayedinit-select",         // Selecting member of DelayedInit.
     "-Xlint:doc-detached",               // A Scaladoc comment appears to be detached from its element.
@@ -91,27 +89,44 @@ lazy val commonSettings = Seq(
     "-Xlint:poly-implicit-overload",     // Parameterized overloaded implicit methods are not visible as view bounds.
     "-Xlint:private-shadow",             // A private field (or class parameter) shadows a superclass field.
     "-Xlint:stars-align",                // Pattern sequence wildcard must align with sequence component.
-    "-Xlint:unsound-match",              // Pattern match may not be typesafe.
-    "-Yno-adapted-args",                 // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
-    "-Ypartial-unification",             // Enable partial unification in type constructor inference
     "-Ywarn-extra-implicit",             // Warn when more than one implicit parameter section is defined.
-    "-Ywarn-inaccessible",               // Warn about inaccessible types in method signatures.
-    "-Ywarn-infer-any",                  // Warn when a type argument is inferred to be `Any`.
-    "-Ywarn-nullary-override",           // Warn when non-nullary `def f()' overrides nullary `def f'.
     "-Ywarn-unused:patvars",             // Warn if a variable bound in a pattern is unused.
     "-language:postfixOps"
-  )
+  ),
+
+  Compile / scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, n)) if n >= 13 => "-Ymacro-annotations" :: Nil
+      case _ => "-Ypartial-unification" :: Nil
+    }
+  },
+
+  libraryDependencies ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, n)) if n >= 13 => Nil
+      case _ => compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
+    }
+  },
+
+  catsVersion := (scalaBinaryVersion.value match {
+    case "2.12" => "1.6.1"
+    case "2.13" => "2.0.0-M4"
+  })
 )
+
+import ReleaseTransformations._
 
 val macros = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup-macros")).settings(
   name := "alphabet-soup-macros",
-  commonSettings ++ publishingSettings
+  commonSettings ++ publishingSettings,
+  crossScalaVersions := supportedScalaVersions
 )
 
 // TODO: Put back in root directory?
 val alphabetSoup = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup")).settings(
   name := "alphabet-soup",
-  commonSettings ++ publishingSettings
+  commonSettings ++ publishingSettings,
+  crossScalaVersions := supportedScalaVersions
 )
 
 lazy val macroJVM = macros.jvm
@@ -123,6 +138,28 @@ lazy val alphabetSoupJS = alphabetSoup.js.dependsOn(macroJS)
 lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS).settings(
   name := "alphabet-soup-parent",
   commonSettings,
+
+  // crossScalaVersions must be set to Nil on the aggregating project
+  crossScalaVersions := Nil,
+
+  publish / skip := true,
+
+  // don't use sbt-release's cross facility
+  releaseCrossBuild := false,
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    releaseStepCommandAndRemaining("+test"),
+    setReleaseVersion,
+    commitReleaseVersion,
+    tagRelease,
+    releaseStepCommandAndRemaining("+publishSigned"),
+    setNextVersion,
+    commitNextVersion,
+    pushChanges
+  ),
+
   PgpKeys.publishSigned := {},
   PgpKeys.publishLocalSigned := {},
   publishLocal := {},

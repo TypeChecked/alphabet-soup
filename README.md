@@ -14,6 +14,12 @@ Releases are available on Maven. Add the following to your build.sbt:
 
 for the version of your choice. The project is fully tagged and release versions are available to view online.
 
+## Release Process
+
+If you're lucky enough to be able to release this project, do `sbt -mem 6000 release` and it will cross-release each scala version + jvm/js combination. Do not do `+release` - this option does not work.
+
+The 6GB of RAM is necessary for the tests to compile at the same time.
+
 ## Concepts
 
 ### Mixers
