@@ -113,8 +113,8 @@ class AtomiserSpec extends FlatSpec with Matchers {
     type H = (Int :: Float :: HNil) :: (Boolean :: Long :: HNil) :: (Double :: (Int :: Float :: HNil) :: HNil) :: String :: HNil
 
     val gen = Atomiser[T]
-    val value: T = T(N(1, 1.4f), P(true, 3l), M(2.3, N(10, 10.4f)), "hello")
-    val hlist: H = (1 :: 1.4f :: HNil) :: (true :: 3l :: HNil) :: (2.3 :: (10 :: 10.4f :: HNil) :: HNil) :: "hello" :: HNil
+    val value: T = T(N(1, 1.4f), P(true, 3L), M(2.3, N(10, 10.4f)), "hello")
+    val hlist: H = (1 :: 1.4f :: HNil) :: (true :: 3L :: HNil) :: (2.3 :: (10 :: 10.4f :: HNil) :: HNil) :: "hello" :: HNil
 
     (gen.to(value): H) shouldBe hlist
     (gen.from(hlist): T) shouldBe value
@@ -222,8 +222,8 @@ class AtomiserSpec extends FlatSpec with Matchers {
     type H = Boolean :: Long :: (((Double :: (String :: HNil) :: HNil) :: HNil) :: Int :: HNil) :: HNil
 
     val gen = Atomiser[T]
-    val value: T = true :: 10l :: (N((5.0, "hello" :: HNil)), 11) :: HNil
-    val hlist: H = true :: 10l :: (((5.0 :: ("hello" :: HNil) :: HNil) :: HNil) :: 11 :: HNil) :: HNil
+    val value: T = true :: 10L :: (N((5.0, "hello" :: HNil)), 11) :: HNil
+    val hlist: H = true :: 10L :: (((5.0 :: ("hello" :: HNil) :: HNil) :: HNil) :: 11 :: HNil) :: HNil
 
     (gen.to(value): H) shouldBe hlist
     (gen.from(hlist): T) shouldBe value
@@ -245,9 +245,9 @@ class AtomiserSpec extends FlatSpec with Matchers {
       HNil
 
     val gen = Atomiser[C]
-    val value = C((5, "hello"), 10.9, true :: 9l :: (N((10.12, "hello2" :: HNil)), 4) :: HNil)
+    val value = C((5, "hello"), 10.9, true :: 9L :: (N((10.12, "hello2" :: HNil)), 4) :: HNil)
     // This commented out behaviour is correct
-    val hlist = (5 :: "hello" :: HNil) :: 10.9 :: (true :: 9l :: (((10.12 :: ("hello2" :: HNil) :: HNil) :: HNil) :: 4 :: HNil) :: HNil) :: HNil
+    val hlist = (5 :: "hello" :: HNil) :: 10.9 :: (true :: 9L :: (((10.12 :: ("hello2" :: HNil) :: HNil) :: HNil) :: 4 :: HNil) :: HNil) :: HNil
 
     (gen.to(value): H) shouldBe hlist
     (gen.from(hlist): C) shouldBe value
