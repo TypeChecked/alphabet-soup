@@ -26,9 +26,9 @@ object AtomicMacro {
 
     def modifiedCompanion(maybeCompDecl: Option[ModuleDef], atomImplicit: Tree, className: TypeName) = {
       maybeCompDecl.fold(q"object ${className.toTermName} { $atomImplicit }"){ compDecl =>
-        val q"object $obj extends ..$bases { ..$body }" = compDecl
+        val q"$mods object $obj extends ..$bases { ..$body }" = compDecl
         q"""
-          object $obj extends ..$bases {
+            $mods object $obj extends ..$bases {
             ..$body
             $atomImplicit
           }
