@@ -211,6 +211,22 @@ class AtomMacroSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "create an implicit Atom for a class whose companion object is implicit" in {
+    @Atomic class T
+    implicit object T {
+      def bob: String = "bob"
+    }
+    implicitly[Atom[T]]
+  }
+
+  it should "create an implicit Atom for a class whose companion object has multiple modifiers" in {
+    @Atomic class T
+    implicit final object T {
+      def bob: String = "bob"
+    }
+    implicitly[Atom[T]]
+  }
+
 }
 
 @Atomic protected sealed abstract class ProtectedFoo(implicit impl: DummyImplicit)
