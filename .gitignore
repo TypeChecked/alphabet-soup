@@ -16,7 +16,9 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+_site/
 
+# subime
 *.sublime-workspace
 *.sublime-project
 
