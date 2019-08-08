@@ -8,7 +8,7 @@ resolvers ++= Seq (
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-lazy val supportedScalaVersions = List("2.12.8", "2.13.0")
+lazy val supportedScalaVersions = List("2.12.9", "2.13.0")
 
 lazy val catsVersion = SettingKey[String]("catsVersion")
 
@@ -56,7 +56,7 @@ lazy val publishingSettings = Seq (
 )
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.0",
+  scalaVersion := "2.12.9",
   organization := "io.typechecked",
 
   libraryDependencies ++= Seq(
@@ -110,7 +110,7 @@ lazy val commonSettings = Seq(
 
   catsVersion := (scalaBinaryVersion.value match {
     case "2.12" => "1.6.1"
-    case "2.13" => "2.0.0-M4"
+    case "2.13" => "2.0.0-RC1"
   })
 )
 
