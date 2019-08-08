@@ -1,8 +1,8 @@
 // shadow sbt-scalajs' crossProject and CrossType from Scala.js 0.6.x
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import microsites._
 
 resolvers ++= Seq (
-  "Maven Central Server" at "http://repo1.maven.org/maven2",
   "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
   "Sonatype OSS Releases"  at "http://oss.sonatype.org/content/repositories/releases/",
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
@@ -135,7 +135,34 @@ lazy val alphabetSoupJVM = alphabetSoup.jvm.dependsOn(macroJVM)
 lazy val macroJS = macros.js
 lazy val alphabetSoupJS = alphabetSoup.js.dependsOn(macroJS)
 
-lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS).settings(
+lazy val docs = project.in(file("docs"))
+  .settings(
+    crossScalaVersions -= "2.13.0",
+    skip.in(publish) := true,
+    micrositeName := "Alphabet Soup",
+    micrositeDescription := "Typelevel Transformations",
+    micrositeUrl := "http://alphabet-soup.typechecked.io",
+    micrositeGithubOwner := "typechecked",
+    micrositeGithubRepo := "alphabet-soup",
+    micrositeAuthor := "TypeChecked",
+    micrositePalette := Map(
+      "brand-primary"     -> "#DF301D",
+      "brand-secondary"   -> "#1B1D21",
+      "brand-tertiary"    -> "#12181f",
+    "gray-dark" -> "#49494B",
+    "gray" -> "#7B7B7E",
+    "gray-light" -> "#E5E5E6",
+    "gray-lighter" -> "#F4F3F4",
+    "white-color" -> "#FFFFFF"
+    ),
+    micrositeDocumentationUrl := "/docs",
+    micrositeDocumentationLabelDescription := "Documentation",
+
+  )
+  .enablePlugins(MicrositesPlugin)
+  .dependsOn(alphabetSoupJVM, macroJVM)
+
+lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS, docs).settings(
   name := "alphabet-soup-parent",
   commonSettings,
 
