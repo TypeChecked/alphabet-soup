@@ -135,10 +135,18 @@ lazy val alphabetSoupJVM = alphabetSoup.jvm.dependsOn(macroJVM)
 lazy val macroJS = macros.js
 lazy val alphabetSoupJS = alphabetSoup.js.dependsOn(macroJS)
 
-lazy val docs = project.in(file("docs"))
+lazy val docs = project.in(file("alphabet-soup-docs"))
   .settings(
     crossScalaVersions -= "2.13.0",
     skip.in(publish) := true,
+
+    libraryDependencies ++= Seq(
+      compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
+      "org.typelevel" %%% "cats-mtl-core" % "0.2.3"
+    ),
+
+    micrositeCompilingDocsTool := WithMdoc,
+    mdocIn := tutSourceDirectory.value,
     micrositeName := "Alphabet Soup",
     micrositeDescription := "Typelevel Transformations",
     micrositeUrl := "http://alphabet-soup.typechecked.io",
@@ -146,20 +154,24 @@ lazy val docs = project.in(file("docs"))
     micrositeGithubRepo := "alphabet-soup",
     micrositeAuthor := "TypeChecked",
     micrositePalette := Map(
-      "brand-primary"     -> "#DF301D",
-      "brand-secondary"   -> "#1B1D21",
-      "brand-tertiary"    -> "#12181f",
-    "gray-dark" -> "#49494B",
-    "gray" -> "#7B7B7E",
-    "gray-light" -> "#E5E5E6",
-    "gray-lighter" -> "#F4F3F4",
-    "white-color" -> "#FFFFFF"
+      "brand-primary" -> "#DF301D",
+      "brand-secondary" -> "#1B1D21",
+      "brand-tertiary" -> "#12181f",
+      "gray-dark" -> "#49494B",
+      "gray" -> "#7B7B7E",
+      "gray-light" -> "#E5E5E6",
+      "gray-lighter" -> "#F4F3F4",
+      "white-color" -> "#FFFFFF"
     ),
     micrositeDocumentationUrl := "/docs",
     micrositeDocumentationLabelDescription := "Documentation",
-
+    micrositeShareOnSocial := false,
+    micrositeGitterChannel := false,
+    mdocVariables := Map(
+      "VERSION" -> version.value
+    )
   )
-  .enablePlugins(MicrositesPlugin)
+  .enablePlugins(MicrositesPlugin, MdocPlugin)
   .dependsOn(alphabetSoupJVM, macroJVM)
 
 lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS, docs).settings(

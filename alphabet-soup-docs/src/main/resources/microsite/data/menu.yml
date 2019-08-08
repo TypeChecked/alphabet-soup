@@ -1,0 +1,21 @@
+options:
+  - title: Introduction
+    url: docs/index.html
+
+  - title: Installation
+    url: docs/installation.html
+
+  - title: Atoms and Atomisation
+    url: docs/atoms.html
+
+  - title: Type Uniqueness
+    url: docs/uniqueness.html
+
+  - title: Examples
+    url: docs/examples.html
+
+  - title: Lensing
+    url: docs/lensing.html
+
+  - title: Tips and Tricks
+    url: docs/tips-tricks.html
