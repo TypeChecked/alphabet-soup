@@ -18,7 +18,7 @@ project/boot/
 project/plugins/project/
 _site/
 
-# subime
+# sublime
 *.sublime-workspace
 *.sublime-project
 
