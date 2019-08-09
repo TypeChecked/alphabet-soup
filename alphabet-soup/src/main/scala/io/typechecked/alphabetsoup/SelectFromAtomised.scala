@@ -1,8 +1,9 @@
 package io.typechecked
 package alphabetsoup
 
+import cats.Functor
 import shapeless.Lazy
-import shapeless.{::, HList, =:!=}
+import shapeless.{::, =:!=, HList}
 
 /**
  * A trait that extracts or replaces a value U (atom or molecule) from a type L, provided the type L
