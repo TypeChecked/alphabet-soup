@@ -1,8 +1,6 @@
 package io.typechecked
 package alphabetsoup
 
-import shapeless.HList
-
 /**
  * Tries to use SelectFromAtomised to produce a value U from L. If it fails, tries to find a default atom
  * of type U
