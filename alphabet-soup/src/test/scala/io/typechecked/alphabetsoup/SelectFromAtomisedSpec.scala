@@ -127,5 +127,4 @@ class SelectFromAtomisedSpec extends FlatSpec with Matchers {
 
     illTyped("SelectFromAtomised[L, U]", ".*could not find implicit value.*SelectFromAtomised.*")
   }
-
 }

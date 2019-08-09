@@ -137,7 +137,7 @@ object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
 
   implicit def bHeadIsAtomRecurse[A, BH, BT <: HList](
     implicit atom: Atom[BH],
-    s: SelectOrDefault[A, BH],
+    s: SelectOrTransmuteOrDefault[A, BH],
     m2: MixerImplFromAtomised[A, BT]
   ): MixerImplFromAtomised[A, BH :: BT] = new MixerImplFromAtomised[A, BH :: BT] {
     def mix(a: A): BH :: BT = s(a) :: m2.mix(a)
@@ -149,7 +149,7 @@ object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
 
   implicit def bHeadIsMoleculeRecurse[A, M[_], BH, BT <: HList](
     implicit molecule: Molecule[M, BH],
-    s: SelectOrDefault[A, M[BH]],
+    s: SelectOrTransmuteOrDefault[A, M[BH]],
     m2: MixerImplFromAtomised[A, BT]
   ): MixerImplFromAtomised[A, M[BH] :: BT] = new MixerImplFromAtomised[A, M[BH] :: BT] {
     def mix(a: A): M[BH] :: BT = s(a) :: m2.mix(a)

@@ -114,6 +114,19 @@ class MixerSpec extends FlatSpec with Matchers {
     illTyped("Mixer[Int :: HNil, (String, Int)]")
   }
 
+  it should "use a transmutation if there is an atom in the target not present in the source" in {
+    implicit val transmute = Transmute.molecular[List, String, String](_.mkString(" "))
+    val m = Mixer[Boolean :: Int :: List[String] :: HNil, String :: Int :: HNil]
+    m.mix(true :: 17 :: List("hello", "world") :: HNil) shouldBe "hello world" :: 17 :: HNil
+  }
+
+  it should "use multiple transmutation if there are atoms in the target not present in the source" in {
+    implicit val transmute1 = Transmute[Int, Boolean](_ % 2 == 0)
+    implicit val transmute2 = Transmute.transmuteK[List, Option, String, String](_.headOption)
+    val m = Mixer[String :: Int :: List[String] :: HNil, Option[String] :: Boolean :: HNil]
+    m.mix("bob" :: 17 :: Nil :: HNil) shouldBe None :: false :: HNil
+  }
+
   it should "work on nested structures taking left-most atom in cases of ambiguity" in {
 
     val a1: A1 = A1(5, "s")
