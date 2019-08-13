@@ -115,7 +115,7 @@ class MixerSpec extends FlatSpec with Matchers {
   }
 
   it should "use a transmutation if there is an atom in the target not present in the source" in {
-    implicit val transmute = Transmute.molecular[List, String, String](_.mkString(" "))
+    implicit val transmute = Transmute.atomize[List, String, String](_.mkString(" "))
     val m = Mixer[Boolean :: Int :: List[String] :: HNil, String :: Int :: HNil]
     m.mix(true :: 17 :: List("hello", "world") :: HNil) shouldBe "hello world" :: 17 :: HNil
   }
