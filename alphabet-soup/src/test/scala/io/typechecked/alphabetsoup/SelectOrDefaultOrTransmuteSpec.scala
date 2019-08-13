@@ -71,7 +71,7 @@ class SelectOrDefaultOrTransmuteSpec extends FlatSpec with Matchers {
   }
 
   it should "for type not present select and map molecule if there is a transmutation in scope" in {
-    implicit val transmute = Transmute.molecular[List, String, String]{ ls: List[String] => ls.mkString(" ")}
+    implicit val transmute = Transmute.atomize[List, String, String]{ ls: List[String] => ls.mkString(" ")}
     type L = Int :: List[String] :: HNil
     type U = String
 

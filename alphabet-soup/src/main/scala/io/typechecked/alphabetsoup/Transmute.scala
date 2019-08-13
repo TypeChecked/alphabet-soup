@@ -13,7 +13,7 @@ object Transmute {
       def convert: A => B = f
   }
 
-  def molecular[M[_], A, B: Atom](f: M[A] => B)(implicit ma: Molecule[M, A]): Transmute[M[A], B] = new Transmute[M[A], B] {
+  def atomize[M[_], A, B: Atom](f: M[A] => B)(implicit ma: Molecule[M, A]): Transmute[M[A], B] = new Transmute[M[A], B] {
     def convert: M[A] => B = f
   }
 
