@@ -55,8 +55,7 @@ as the user’s internal id.</p>
 <p>Suppose you have the following <code class="highlighter-rouge">ApplicativeAsk</code> instance, for some functor <code class="highlighter-rouge">F[_]</code>:</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">aa</span><span class="k">:</span> <span class="kt">ApplicativeAsk</span><span class="o">[</span><span class="kt">F</span>, <span class="o">(</span><span class="kt">A</span>, <span class="kt">B</span>, <span class="kt">C</span>, <span class="kt">D</span><span class="o">)]</span> <span class="k">=</span> <span class="kc">null</span>
-<span class="c1">// aa: ApplicativeAsk[F, (A, B, C, D)] = null
-</span></code></pre></div></div>
+</code></pre></div></div>
 
 <p>and you wanted to read <code class="highlighter-rouge">(B, D)</code>. You would have to do the following:</p>
 
@@ -86,10 +85,9 @@ instead, forgetting about <code class="highlighter-rouge">A</code> and <code cla
 <p>Now, we have our original <code class="highlighter-rouge">ApplicativeAsk</code>:</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">implicit</span> <span class="k">val</span> <span class="nv">applicativeAsk</span><span class="k">:</span> <span class="kt">ApplicativeAsk</span><span class="o">[</span><span class="kt">F</span>, <span class="o">(</span><span class="kt">A</span>, <span class="kt">B</span>, <span class="kt">C</span>, <span class="kt">D</span><span class="o">)]</span> <span class="k">=</span> <span class="kc">null</span>
-<span class="c1">// applicativeAsk: ApplicativeAsk[F, (A, B, C, D)] = null
-</span></code></pre></div></div>
+</code></pre></div></div>
 
-<p>and we can get any sub-ApplicativeAsk, for free:</p>
+<p>and we can get any sub-<code class="highlighter-rouge">ApplicativeAsk</code>, for free:</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implicitly</span><span class="o">[</span><span class="kt">ApplicativeAsk</span><span class="o">[</span><span class="kt">F</span>, <span class="o">(</span><span class="kt">B</span>, <span class="kt">D</span><span class="o">)]]</span>
 <span class="n">implicitly</span><span class="o">[</span><span class="kt">ApplicativeAsk</span><span class="o">[</span><span class="kt">F</span>, <span class="o">(</span><span class="kt">B</span>, <span class="kt">A</span><span class="o">)]]</span>
