@@ -169,7 +169,11 @@ lazy val docs = project.in(file("alphabet-soup-docs"))
     micrositeGitterChannel := false,
     mdocVariables := Map(
       "VERSION" -> version.value
-    )
+    ),
+    excludeFilter in ghpagesCleanSite :=
+      new FileFilter{
+        def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
+      } || "versions.html"
   )
   .enablePlugins(MicrositesPlugin, MdocPlugin)
   .dependsOn(alphabetSoupJVM, macroJVM)
