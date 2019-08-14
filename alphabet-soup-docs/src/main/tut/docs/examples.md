@@ -5,7 +5,7 @@ title: Examples
 
 # Worked Examples
 
-```scala:invisible
+```scala mdoc:invisible
 import io.typechecked.alphabetsoup._
 import io.typechecked.alphabetsoup.macros._
 import cats.mtl.ApplicativeAsk
@@ -19,7 +19,7 @@ implicit val fFunctor: Functor[F] = null
 
 First, some value classes we'll be using in all the examples:
 
-```scala
+```scala mdoc:silent
 @Atomic case class Username(value: String)
 @Atomic case class UserId(value: Int)
 @Atomic case class Gender(value: String)
@@ -36,7 +36,7 @@ as the user's internal id.
 
 So imagine the following:
 
-```scala
+```scala mdoc:silent
 case class DbUser(
   id: UserId,
   name: Username,
@@ -53,7 +53,7 @@ case class ApiUser(
 
 Now, to turn one into the other you would usually have to write:
 
-```scala
+```scala mdoc:silent
 def dbToApi(u: DbUser): ApiUser = ApiUser(
   name = u.name,
   animal = u.favouriteAnimal,
@@ -63,7 +63,7 @@ def dbToApi(u: DbUser): ApiUser = ApiUser(
 
 At no point above did we make a choice: that code could write itself. And, indeed, it does! With a `Mixer`:
 
-```scala
+```scala mdoc:silent
 def dbToApi2(u: DbUser): ApiUser = Mixer[DbUser, ApiUser].mix(u)
 ```
 
@@ -75,14 +75,13 @@ Database and API classes can get pretty big, and intertwined. Alphabet soup cuts
 
 Suppose you have the following `ApplicativeAsk` instance, for some functor `F[_]`:
 
-TODO Fix
-```scala
-val aa: ApplicativeAsk[F, (A, B, C, D)] = ???
+```scala mdoc:silent
+val aa: ApplicativeAsk[F, (A, B, C, D)] = null
 ```
 
 and you wanted to read `(B, D)`. You would have to do the following:
 
-```scala
+```scala mdoc:compile-only
 val result: F[(B, D)] = aa.ask.map(tuple => tuple._2 -> tuple._4)
 ```
 
@@ -93,37 +92,31 @@ instead, forgetting about `A` and `C`. This would be several lines of canonical 
 
 Luckily, alphabet soup can reduce this to nothing at the call-site:
 
-TODO Fix
-```scala
+```scala mdoc:silent
 import shapeless.=:!=
 
-implicit def getAA[M[_], X, Y](implicit
+implicit def getAA[M[_], X, Y](
+  implicit ax: ApplicativeAsk[M, X],
   ev: X =:!= Y,
-  rx: ApplicativeAsk[M, X],
-  m: Mixer[X, Y],
-  M: Functor[M]
-) = new ApplicativeAsk[M, Y] {
-  def ask: M[Y] = rx.ask.map(m.mix(_))
-  def reader[A](f: Y => A): M[A] = ask.map(f)
+  m: Mixer[X, Y]
+): ApplicativeAsk[M, Y] = new ApplicativeAsk[M, Y] {
+  val applicative = ax.applicative
+  def ask: M[Y] = applicative.map(ax.ask)(m.mix)
+  def reader[Z](f: Y => Z): M[Z] = ax.reader[Z](a => f(m.mix(a)))
 }
 ```
 
 Now, we have our original `ApplicativeAsk`:
 
-TODO Fix
-``` scala
+``` scala mdoc:silent
 implicit val applicativeAsk: ApplicativeAsk[F, (A, B, C, D)] = null
 ```
 
-and we can get any sub-ApplicativeAsk, for free:
+and we can get any sub-`ApplicativeAsk`, for free:
 
-TODO Fix below compilation
-```scala
-
-getAA[F, (A, B, C, D), B]
-
-//implicitly[ApplicativeAsk[F, (B, D)]]
-//implicitly[ApplicativeAsk[F, (B, A)]]
-//implicitly[ApplicativeAsk[F, (C, D, B)]]
+```scala mdoc:compile-only
+implicitly[ApplicativeAsk[F, (B, D)]]
+implicitly[ApplicativeAsk[F, (B, A)]]
+implicitly[ApplicativeAsk[F, (C, D, B)]]
 implicitly[ApplicativeAsk[F, B]]
 ```
