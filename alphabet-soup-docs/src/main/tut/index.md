@@ -7,7 +7,7 @@ title:  "Home"
 
 ### Typelevel Transformations
 
-Alphabet Soup is a library that will generate mappings between data-structures for you, automatically.
+Alphabet Soup is a boilerplate-reduction library that will generate mappings between data-structures for you, automatically.
 
 The order of types in a tuple or case class should not matter, just the type itself, if all the types are unique:
 

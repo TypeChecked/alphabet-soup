@@ -5,7 +5,7 @@ title: Introduction
 
 # Introduction
 
-Alphabet soup provides mappings between arbitrarily nested case classes, tuples and hlists - for free.
+Alphabet soup is a boilerplate-reduction library which provides mappings between arbitrarily nested case classes, tuples and hlists - for free.
 
 The top-level class you will be using is `Mixer[Source, Target]`, which produces a mapping from `Source` to `Target`. Here's a quick example:
 
