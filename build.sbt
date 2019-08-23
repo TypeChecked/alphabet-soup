@@ -91,7 +91,8 @@ lazy val commonSettings = Seq(
     "-Xlint:stars-align",                // Pattern sequence wildcard must align with sequence component.
     "-Ywarn-extra-implicit",             // Warn when more than one implicit parameter section is defined.
     "-Ywarn-unused:patvars",             // Warn if a variable bound in a pattern is unused.
-    "-language:postfixOps"
+    "-language:postfixOps",
+    "-Ywarn-macros:after"
   ),
 
   Compile / scalacOptions ++= {
