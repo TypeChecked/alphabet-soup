@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: mcgizzle/alphabetsoup-ci
 
     working_directory: ~/repo
 
