@@ -18,7 +18,7 @@ jobs:
             - v1-dependencies-{{ checksum "build.sbt" }}
             - v1-dependencies-
 
-      - run: cat /dev/null | sbt +test:compile
+      - run: cat /dev/null | sbt +test:compile makeMicrosite
 
       - save_cache:
           paths:
