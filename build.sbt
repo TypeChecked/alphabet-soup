@@ -111,7 +111,7 @@ lazy val commonSettings = Seq(
 
   catsVersion := (scalaBinaryVersion.value match {
     case "2.12" => "1.6.1"
-    case "2.13" => "2.0.0-RC1"
+    case "2.13" => "2.0.0-RC2"
   })
 )
 
