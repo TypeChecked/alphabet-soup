@@ -1,6 +1,6 @@
 # Alphabet soup
 
-[![CircleCI](https://circleci.com/gh/typechecked/alphabet-soup.svg?style=svg)](https://circleci.com/gh/typechecked/alphabet-soup)
+[![CircleCI](https://circleci.com/gh/TypeChecked/alphabet-soup.svg?style=svg)](https://circleci.com/gh/TypeChecked/alphabet-soup)
 ![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/io.typechecked/alphabet-soup_2.12?server=https%3A%2F%2Foss.sonatype.org%2F)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
