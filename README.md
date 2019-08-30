@@ -1,7 +1,7 @@
 # Alphabet soup
 
-[![CircleCI](https://circleci.com/gh/TypeChecked/alphabet-soup.svg?style=svg)](https://circleci.com/gh/TypeChecked/alphabet-soup)
-![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/io.typechecked/alphabet-soup_2.12?server=https%3A%2F%2Foss.sonatype.org%2F)
+[![CircleCI](https://circleci.com/gh/TypeChecked/alphabet-soup.svg?style=shield)](https://circleci.com/gh/TypeChecked/alphabet-soup)
+![Maven Central (Releases)](https://img.shields.io/maven-central/v/io.typechecked/alphabet-soup_2.12)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This library is intended to give a seamless way to manipulate scala structures into one another, mixing the types intelligently as required
