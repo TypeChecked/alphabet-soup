@@ -12,7 +12,7 @@ trait Atomiser[T] extends Serializable {
   def from(r : Repr) : T
 }
 
-object Atomiser extends LowPriorityAtomiserImplicits1 {
+object Atomiser extends LowPriorityAtomiserImplicits {
 
   type Aux[T, Repr0] = Atomiser[T] { type Repr = Repr0 }
 
@@ -36,6 +36,10 @@ object Atomiser extends LowPriorityAtomiserImplicits1 {
       def from(u: T): T = u
     }
 
+}
+
+trait LowPriorityAtomiserImplicits {
+
   // If we've hit a molecule we go no deeper
   implicit def moleculeCase[M[_], T](implicit ev: Molecule[M, T]): Atomiser.Aux[M[T], M[T]] =
     new Atomiser[M[T]] {
@@ -43,10 +47,6 @@ object Atomiser extends LowPriorityAtomiserImplicits1 {
       def to(t: M[T]): M[T] = t
       def from(u: M[T]): M[T] = u
     }
-
-}
-
-trait LowPriorityAtomiserImplicits1 {
 
   // Turn T into an HList and recurse. Low priority because we should match on T being HList first
   implicit def genericCase[T, GenOut, AtomiserOut <: HList](

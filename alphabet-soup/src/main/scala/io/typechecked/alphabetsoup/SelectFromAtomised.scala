@@ -68,6 +68,10 @@ object SelectFromAtomised extends LowPrioritySelectFromAtomised {
       def replace(u: U, l: H :: T): H :: T = st.value.replace(u, l.head) :: l.tail
     }
 
+}
+
+trait LowPrioritySelectFromAtomised extends LowLowPrioritySelectFromAtomised {
+
   // case where A & B are isomorphic
   implicit def fuzzyHeadSelectMoleculeABIso[M[_], A, T <: HList, B](
     implicit molecule: Molecule[M, B],
@@ -109,7 +113,7 @@ object SelectFromAtomised extends LowPrioritySelectFromAtomised {
 
 }
 
-trait LowPrioritySelectFromAtomised {
+trait LowLowPrioritySelectFromAtomised {
 
   implicit def fuzzyHeadSelectMolecule[M[_], A, T <: HList, B](
     implicit molecule: Molecule[M, B],
