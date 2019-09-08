@@ -9,12 +9,6 @@ import shapeless.test.illTyped
 
 class DefaultAtomSpec extends FlatSpec with Matchers {
 
-  "DefaultAtom" should "not compile defaults for molecules" in {
-
-    illTyped("""Atom.DefaultAtom[List[String]](List("No!"))""")
-
-  }
-
   it should "not atom select when no default is supplied" in {
     case class A(a: Int)
     illTyped("AtomSelector[A, String].apply(A(7))")
@@ -77,6 +71,11 @@ class DefaultAtomSpec extends FlatSpec with Matchers {
       implicit val default: Atom.DefaultAtom[A] = Atom.DefaultAtom[A](new A{})
       "implicitly[Atom[A]]" should compile
     }
+  }
+
+  it should "be able to create default atom if a molecule exists" in {
+    "implicitly[Molecule[List, String]]" should compile
+    "Atom.DefaultAtom[List[String]] = Atom.DefaultAtom(List.empty[String])" should compile
   }
 
   "Mixer" should "work with a supplied default" in {

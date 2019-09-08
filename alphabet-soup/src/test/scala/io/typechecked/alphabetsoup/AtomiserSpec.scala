@@ -275,6 +275,17 @@ class AtomiserSpec extends FlatSpec with Matchers {
     (gen.from(hlist): B) shouldBe value
   }
 
+  it should "work with an atom and a molecule in scope" in {
+    implicit val mol : Molecule[List, String] = implicitly[Molecule[List, String]]
+    implicit val atom: Atom[List[String]] = Atom[List[String]]
+
+    case class A(value: List[String])
+
+    val gen = Atomiser[A]
+
+    (gen.to(A("hi" :: Nil)): List[String] :: HNil) shouldBe ("hi" :: Nil) :: HNil
+  }
+
   it should "atomise simple things correctly" in {
 
     import macros.Atomic
