@@ -1,9 +1,11 @@
 package io.typechecked
 package alphabetsoup
 
+import shapeless.::
+import shapeless.Generic
 import shapeless.HList
 import shapeless.Lazy
-import shapeless.{::, Generic}
+import shapeless.LowPriority
 
 // T => HList or Atom or Molecule
 trait Atomiser[T] extends Serializable {
@@ -36,17 +38,20 @@ object Atomiser extends LowPriorityAtomiserImplicits {
       def from(u: T): T = u
     }
 
-}
-
-trait LowPriorityAtomiserImplicits {
-
   // If we've hit a molecule we go no deeper
-  implicit def moleculeCase[M[_], T](implicit ev: Molecule[M, T]): Atomiser.Aux[M[T], M[T]] =
+  implicit def moleculeCase[M[_], T](
+    implicit ev: Molecule[M, T],
+    lp: LowPriority
+  ): Atomiser.Aux[M[T], M[T]] =
     new Atomiser[M[T]] {
       type Repr = M[T]
       def to(t: M[T]): M[T] = t
       def from(u: M[T]): M[T] = u
     }
+
+}
+
+trait LowPriorityAtomiserImplicits {
 
   // Turn T into an HList and recurse. Low priority because we should match on T being HList first
   implicit def genericCase[T, GenOut, AtomiserOut <: HList](
