@@ -6,6 +6,7 @@ import shapeless.=:!=
 import shapeless.HList
 import shapeless.HNil
 import shapeless.Lazy
+import shapeless.LowPriority
 
 // This is the version application code should use
 trait Mixer[A, B] {
@@ -102,7 +103,8 @@ object MixerImpl {
   }
 
   implicit def bIsMoleculeRecurse[A, M[_], B](
-    implicit molecule: Molecule[M, B],
+    implicit lp: LowPriority,
+    molecule: Molecule[M, B],
     s: AtomSelector[A, M[B]]
   ): MixerImpl[A, M[B]] = new MixerImpl[A, M[B]] {
     def mix(a: A): M[B] = s(a)
@@ -148,7 +150,8 @@ object MixerImplFromAtomised extends LowPriorityMFAImplicits1 {
   }
 
   implicit def bHeadIsMoleculeRecurse[A, M[_], BH, BT <: HList](
-    implicit molecule: Molecule[M, BH],
+    implicit lp: LowPriority,
+    molecule: Molecule[M, BH],
     s: SelectOrDefaultOrTransmute[A, M[BH]],
     m2: MixerImplFromAtomised[A, BT]
   ): MixerImplFromAtomised[A, M[BH] :: BT] = new MixerImplFromAtomised[A, M[BH] :: BT] {
