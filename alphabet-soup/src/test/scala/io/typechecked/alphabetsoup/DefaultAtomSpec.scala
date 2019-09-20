@@ -75,7 +75,7 @@ class DefaultAtomSpec extends FlatSpec with Matchers {
 
   it should "be able to create default atom if a molecule exists" in {
     "implicitly[Molecule[List, String]]" should compile
-    "Atom.DefaultAtom[List[String]] = Atom.DefaultAtom(List.empty[String])" should compile
+    "val a: Atom.DefaultAtom[List[String]] = Atom.DefaultAtom(List.empty[String])" should compile
   }
 
   "Mixer" should "work with a supplied default" in {

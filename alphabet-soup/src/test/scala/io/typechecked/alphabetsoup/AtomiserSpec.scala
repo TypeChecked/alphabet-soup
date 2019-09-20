@@ -276,14 +276,15 @@ class AtomiserSpec extends FlatSpec with Matchers {
   }
 
   it should "work with an atom and a molecule in scope" in {
-    implicit val mol : Molecule[List, String] = implicitly[Molecule[List, String]]
-    implicit val atom: Atom[List[String]] = Atom[List[String]]
+    import cats.implicits.catsStdInstancesForVector
+    implicit val mol : Molecule[Vector, String] = Molecule[Vector, String]
+    implicit val atom: Atom[Vector[String]] = Atom[Vector[String]]
 
-    case class A(value: List[String])
+    case class A(value: Vector[String])
 
     val gen = Atomiser[A]
 
-    (gen.to(A("hi" :: Nil)): List[String] :: HNil) shouldBe ("hi" :: Nil) :: HNil
+    (gen.to(A(Vector("hi"))): Vector[String] :: HNil) shouldBe Vector("hi") :: HNil
   }
 
   it should "atomise simple things correctly" in {
