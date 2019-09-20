@@ -1,8 +1,7 @@
 package io.typechecked
 package alphabetsoup
 
-import shapeless.Lazy
-import shapeless.{::, HList, =:!=}
+import shapeless.{::, =:!=, HList, Lazy, LowPriority}
 
 /**
  * A trait that extracts or replaces a value U (atom or molecule) from a type L, provided the type L
@@ -54,6 +53,15 @@ object SelectFromAtomised extends LowPrioritySelectFromAtomised {
       def replace(u: H, l: H :: T): H :: T = u :: l.tail
     }
 
+  implicit def preciseHeadSelectMolecule[M[_], A, T <: HList](
+      implicit molecule: Molecule[M, A],
+      lp: LowPriority
+  ): SelectFromAtomised[M[A] :: T, M[A]] =
+    new SelectFromAtomised[M[A] :: T, M[A]] {
+      def apply(t: M[A] :: T): M[A] = t.head
+      def replace(u: M[A], l: M[A] :: T): M[A] :: T = u :: l.tail
+    }
+
   implicit def recurse[H, T <: HList, U: Atom](implicit st: SelectFromAtomised[T, U]): SelectFromAtomised[H :: T, U] =
     new SelectFromAtomised[H :: T, U] {
       def apply(l: H :: T): U = st(l.tail)
@@ -76,21 +84,12 @@ trait LowPrioritySelectFromAtomised extends LowLowPrioritySelectFromAtomised {
   implicit def fuzzyHeadSelectMoleculeABIso[M[_], A, T <: HList, B](
     implicit molecule: Molecule[M, B],
     ev: A =:!= B,
-    // TODO: Isomorphism typeclass
     mixer: Lazy[Mixer[A, B]],
     mixer2: Lazy[Mixer[B, A]]
   ): SelectFromAtomised[M[A] :: T, M[B]] =
     new SelectFromAtomised[M[A] :: T, M[B]] {
       def apply(t: M[A] :: T): M[B] = molecule.functor.map(t.head)(mixer.value.mix)
       def replace(u: M[B], l: M[A] :: T): M[A] :: T = molecule.functor.map(u)(mixer2.value.mix) :: l.tail
-    }
-
-  implicit def preciseHeadSelectMolecule[M[_], A, T <: HList](
-    implicit molecule: Molecule[M, A]
-  ): SelectFromAtomised[M[A] :: T, M[A]] =
-    new SelectFromAtomised[M[A] :: T, M[A]] {
-      def apply(t: M[A] :: T): M[A] = t.head
-      def replace(u: M[A], l: M[A] :: T): M[A] :: T = u :: l.tail
     }
 
   implicit def recurseTailMolecule[H, T <: HList, M[_], U](

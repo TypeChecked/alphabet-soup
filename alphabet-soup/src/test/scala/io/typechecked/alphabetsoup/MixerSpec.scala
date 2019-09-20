@@ -2,6 +2,7 @@ package io.typechecked
 package alphabetsoup
 
 import cats.Functor
+import io.typechecked.alphabetsoup.Atom.DefaultAtom
 import io.typechecked.alphabetsoup.macros.Atomic
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -356,21 +357,25 @@ class MixerSpec extends FlatSpec with Matchers {
     class Foo
     type A = Vector[String]
 
-    val F: Functor[Vector] = new Functor[Vector] {
-      def map[A, B](fa: Vector[A])(f: A => B): Vector[B] = fa.map(f).reverse
-    }
-    implicit val mol: Molecule[Vector, String] = Molecule[Vector, String](F)
+    import cats.implicits.catsStdInstancesForVector
+    implicit val mol: Molecule[Vector, String] = Molecule[Vector, String]
 
     // if there is an atom in scope it uses the atom for mixing
     val _ = {
       implicit val atom: Atom[A] = Atom[A]
-      val mixer = Mixer[(A, Boolean), (Boolean, A)]
-      mixer.mix((Vector("hi", "there"), true)) shouldBe (true, Vector("hi", "there"))
+      val mixer = Mixer[(A, Boolean), Boolean :: A :: HNil]
+      mixer.mix((Vector("hi", "there"), true)) shouldBe true :: Vector("hi", "there") :: HNil
+    }
+
+    val _1 = {
+      implicit val atom: DefaultAtom[A] = DefaultAtom[A](Vector.empty[String])
+      val mixer = Mixer[Boolean :: HNil, Boolean :: A :: HNil]
+      mixer.mix(true :: HNil) shouldBe true :: Vector.empty[String] :: HNil
     }
 
     //if there is no atom in scope it uses the molecule for mixing
-    val mixer = Mixer[(A, Boolean), (Boolean, A)]
-    mixer.mix((Vector("hi", "there"), true)) shouldBe (true, Vector("there", "hi"))
+    val mixer = Mixer[(A, Boolean), Boolean :: A :: HNil]
+    mixer.mix((Vector("hi", "there"), true)) shouldBe true :: Vector("hi", "there") :: HNil
   }
 
   "Mixer with defaults" should "supply a default value" in {
