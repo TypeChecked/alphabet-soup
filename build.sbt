@@ -10,8 +10,6 @@ resolvers ++= Seq (
 
 lazy val supportedScalaVersions = List("2.12.9", "2.13.0")
 
-lazy val catsVersion = SettingKey[String]("catsVersion")
-
 lazy val publishingSettings = Seq (
 
   credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credential"),
@@ -61,7 +59,6 @@ lazy val commonSettings = Seq(
 
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.3",
-    "org.typelevel" %%% "cats-core" % catsVersion.value,
     "org.scalactic" %%% "scalactic" % "3.0.8",
     "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
   ),
@@ -109,10 +106,6 @@ lazy val commonSettings = Seq(
     }
   },
 
-  catsVersion := (scalaBinaryVersion.value match {
-    case "2.12" => "1.6.1"
-    case "2.13" => "2.0.0-RC2"
-  })
 )
 
 import ReleaseTransformations._
@@ -126,15 +119,32 @@ val macros = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(
 // TODO: Put back in root directory?
 val alphabetSoup = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup")).settings(
   name := "alphabet-soup",
-  commonSettings ++ publishingSettings,
+  commonSettings ++ publishingSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % "2.0.0",
+    )
+  ),
   crossScalaVersions := supportedScalaVersions
 )
 
+val mtl = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("alphabet-soup-mtl")).settings(
+  name := "alphabet-soup-mtl",
+  commonSettings ++ publishingSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % "2.0.0",
+      "org.typelevel" %%% "cats-mtl-core" % "0.7.0",
+    )
+  ),
+  crossScalaVersions := supportedScalaVersions
+).dependsOn(alphabetSoup)
+
 lazy val macroJVM = macros.jvm
 lazy val alphabetSoupJVM = alphabetSoup.jvm.dependsOn(macroJVM)
+lazy val mtlJVM = mtl.jvm
 
 lazy val macroJS = macros.js
 lazy val alphabetSoupJS = alphabetSoup.js.dependsOn(macroJS)
+lazy val mtlJS = mtl.js
 
 lazy val docs = project.in(file("alphabet-soup-docs"))
   .settings(
@@ -177,9 +187,17 @@ lazy val docs = project.in(file("alphabet-soup-docs"))
       } || "versions.html"
   )
   .enablePlugins(MicrositesPlugin, MdocPlugin)
-  .dependsOn(alphabetSoupJVM, macroJVM)
+  .dependsOn(alphabetSoupJVM, macroJVM, mtlJVM)
 
-lazy val alphabetSoupParent = project.in(file(".")).aggregate(macroJVM, macroJS, alphabetSoupJVM, alphabetSoupJS, docs).settings(
+lazy val alphabetSoupParent = project.in(file(".")).aggregate(
+  macroJVM,
+  macroJS,
+  alphabetSoupJVM,
+  alphabetSoupJS,
+  mtlJVM,
+  mtlJS,
+  docs
+).settings(
   name := "alphabet-soup-parent",
   commonSettings,
 
