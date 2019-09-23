@@ -28,4 +28,4 @@ jobs:
           key: v1-dependencies--{{ checksum "build.sbt" }}
 
       # run tests!
-      - run: cat /dev/null | sbt +alphabetSoupJVM/test
+      - run: cat /dev/null | sbt +macrosJVM/test +alphabetSoupJVM/test +mtlJVM/test
