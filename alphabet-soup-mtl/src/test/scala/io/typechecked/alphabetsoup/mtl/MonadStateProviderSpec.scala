@@ -28,14 +28,14 @@ class MonadStateProviderSpec extends FlatSpec with Matchers {
   "MonadStateProvider" should "be provided for sub groupings of constituent types" in {
 
     // implicits pulled in from package object
-    implicitly[MonadState[Id, (String, Boolean, Int)]]
-    implicitly[MonadState[Id, (Char, Int)]]
+    implicitly[MonadState[F, (String, Boolean, Int)]]
+    implicitly[MonadState[F, (Char, Int)]]
 
   }
 
   it should "get, set, inspect and modify correctly" in {
 
-    val ms2 = implicitly[MonadState[Id, (Char, Int)]]
+    val ms2 = implicitly[MonadState[F, (Char, Int)]]
 
     ms2.set('p' -> 999)
     ms.get shouldBe ((999, "hello" -> true, 'p'))
